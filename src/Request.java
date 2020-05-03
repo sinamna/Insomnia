@@ -1,6 +1,3 @@
-import javax.swing.*;
-import javax.swing.tree.*;
-
 public class Request {
     private RequestPanel requestPanel;
     private ResponsePanel responsePanel;
@@ -8,7 +5,7 @@ public class Request {
     private String url;
     private String Option;
     public Request(String requestName){
-        requestPanel=new RequestPanel();
+        requestPanel=new RequestPanel(this);
         responsePanel=new ResponsePanel();
         this.requestName=requestName;
         this.Option="GET";
