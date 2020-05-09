@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/HTTP_Client.iml" filepath="$PROJECT_DIR$/HTTP_Client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Insomnia.iml" filepath="$PROJECT_DIR$/Insomnia.iml" />
     </modules>
   </component>
 </project>

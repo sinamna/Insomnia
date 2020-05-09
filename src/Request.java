@@ -1,14 +1,19 @@
+import java.util.ArrayList;
+
 public class Request {
     private RequestPanel requestPanel;
     private ResponsePanel responsePanel;
     private String requestName;
     private String url;
-    private String Option;
-    public Request(String requestName){
+    private String option;
+    private ArrayList<HeaderInfo> headers;
+    public Request(String requestName,String option){
         requestPanel=new RequestPanel(this);
         responsePanel=new ResponsePanel();
         this.requestName=requestName;
-        this.Option="GET";
+        this.option=option;
+        headers=new ArrayList<>();
+
     }
     public RequestPanel getRequestPanel() {
         return requestPanel;
@@ -23,12 +28,13 @@ public class Request {
         this.url = url;
     }
     public void setOption(String option) {
-        Option = option;
-
+        this.option = option;
     }
-
+    public void addHeaderInfo(HeaderInfo headerToAdd){
+        headers.add(headerToAdd );
+    }
     public String getOption() {
-        return Option;
+        return option;
     }
 
     @Override
