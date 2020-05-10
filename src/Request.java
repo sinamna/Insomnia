@@ -31,10 +31,15 @@ public class Request {
         this.option = option;
     }
     public void addHeaderInfo(HeaderInfo headerToAdd){
-        headers.add(headerToAdd );
+        if(!headers.contains(headerToAdd))
+              headers.add(headerToAdd);
     }
     public String getOption() {
         return option;
+    }
+
+    public ArrayList<HeaderInfo> getHeaders() {
+        return headers;
     }
 
     @Override
