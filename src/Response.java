@@ -6,9 +6,9 @@ public class Response {
     private String elapsedTime;
     private String responseSize;
     private String responseText;
-    private ArrayList<HeaderInfo> headers;
+    private ArrayList<Info> headers;
     private ResponsePanel responsePanel;
-    public Response(ArrayList<HeaderInfo> headers){
+    public Response(ArrayList<Info> headers){
         //responsePanel use Strings field
         //it should be initialized after fields
         statusCode="hi";
@@ -45,7 +45,7 @@ public class Response {
         this.responseText = responseText;
     }
 
-    public void setHeaders(ArrayList<HeaderInfo> headers) {
+    public void setHeaders(ArrayList<Info> headers) {
         this.headers = headers;
     }
 
@@ -69,7 +69,7 @@ public class Response {
         return responseText;
     }
 
-    public ArrayList<HeaderInfo> getHeaders() {
+    public ArrayList<Info> getHeaders() {
         return headers;
     }
 }

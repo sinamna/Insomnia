@@ -1,8 +1,8 @@
-public class HeaderInfo {
+public class Info {
     private String key;
     private String value;
     private boolean enabled;
-    public HeaderInfo(){
+    public Info(){
         key=null;
         value=null;
         enabled=false;

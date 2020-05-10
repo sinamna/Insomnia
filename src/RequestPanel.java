@@ -1,4 +1,5 @@
 import Insomnia.TextLineNumber;
+import com.sun.xml.internal.ws.api.message.Header;
 
 import javax.swing.*;
 import java.awt.*;
@@ -47,6 +48,8 @@ public class RequestPanel extends JPanel {
                     updateUI();
                 }
             });
+            String option=request.getOption();
+            methodList.setSelectedIndex(findSelectedIndex(option));
 
             //creating textField for url
             urlText = new JTextField("https://api.myproduct.com/v1/users");
@@ -73,26 +76,25 @@ public class RequestPanel extends JPanel {
         private class SendBtnHandler implements ActionListener {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Response newResponse=new Response(request.getHeaders());
+                Response newResponse = new Response(request.getHeaders());
                 splitPane.setRightComponent(newResponse.getResponsePanel());
                 splitPane.updateUI();
                 requestSent = true;
             }
         }
+
+        private int findSelectedIndex(String option){
+            int found = 0;
+            for(int i=0;i<options.length;i++){
+                if (options[i].equals(option))
+                    found=i;
+            }
+            return found;
+        }
     }
-//        private int findDefaultSelection(String option) {
-//            int index = 0;
-//            for (String currentOP : options) {
-//                if (currentOP.equals(option))
-//                    break;
-//                index++;
-//            }
-//            return index;
-//        }
-//    }
 
     //------------------------------------------------------------------------------------------------
-    private class CenterPanel extends JPanel {
+    class CenterPanel extends JPanel {
         JMenuBar menuBar;
         JMenu bodyMenu;
         JMenu headerMenu;
@@ -123,29 +125,28 @@ public class RequestPanel extends JPanel {
             //the body menu
             bodyMenu = new JMenu("Body");
             JMenuItem formDataItem = new JMenuItem("Form Data");
-            formDataItem.addActionListener(new MenuHandler.MenuItemHandler(layout,mainPanel));
+            formDataItem.addActionListener(new MenuHandler.MenuItemHandler(layout, mainPanel));
             JMenuItem jsonItem = new JMenuItem("JSON");
-            jsonItem.addActionListener(new MenuHandler.MenuItemHandler(layout,mainPanel));
+            jsonItem.addActionListener(new MenuHandler.MenuItemHandler(layout, mainPanel));
             bodyMenu.add(formDataItem);
             bodyMenu.add(jsonItem);
             menuBar.add(bodyMenu);
 
             //header Menu
             headerMenu = new JMenu("Header");
-            headerMenu.addMenuListener(new MenuHandler.MenuSelectionHandler(layout,mainPanel));
+            headerMenu.addMenuListener(new MenuHandler.MenuSelectionHandler(layout, mainPanel));
             menuBar.add(headerMenu);
 
             //Auth Menu
             authMenu = new JMenu("Auth");
             JMenuItem bearerItem = new JMenuItem("Bearer");
-            bearerItem.addActionListener(new MenuHandler.MenuItemHandler(layout,mainPanel));
+            bearerItem.addActionListener(new MenuHandler.MenuItemHandler(layout, mainPanel));
             authMenu.add(bearerItem);
             menuBar.add(authMenu);
 
             //queryMenu
             query = new JMenu("Query");
             menuBar.add(query);
-
 
 
             //creating menu items panel
@@ -163,168 +164,135 @@ public class RequestPanel extends JPanel {
 
         //---------------------------------------------------------------------
         private class HeaderPanel extends JPanel {
-            private HashMap<HeaderInfo, JPanel> list;
-
-            private class HeaderBox extends JPanel {
-                private JTextField key;
-                private JTextField value;
-                private JButton delBtn;
-                private JCheckBox checkBox;
-                private boolean isLast;
-                private HeaderInfo headerInfo;
-
-                public HeaderBox(HeaderInfo headerInfo) {
-                    super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-                    //setting HeaderBox attributes
-                    setFocusable(true);
-                    addFocusListener(new SaveDataHandler());
-                    setPreferredSize(new Dimension(300, 30));
-                    setMaximumSize(new Dimension(1000, 35));
-
-                    //initializing the textField for key
-                    key = new JTextField();
-                    key.addMouseListener(new AutomaticAddingHandler());
-                    key.addFocusListener(new SaveDataHandler());
-                    key.setPreferredSize(new Dimension(110, 30));
-
-                    //initializing the textField for value
-                    value = new JTextField();
-                    value.addMouseListener(new AutomaticAddingHandler());
-                    value.setPreferredSize(new Dimension(110, 30));
-                    value.addFocusListener(new SaveDataHandler());
-                    //initializing the combo box to represent state of header
-                    checkBox = new JCheckBox();
-                    checkBox.addItemListener(new ItemListener() {
-                        @Override
-                        public void itemStateChanged(ItemEvent e) {
-                            if (checkBox.isSelected()) {
-
-                                headerInfo.setEnabled(true);
-                            } else {
-                                System.out.println("true");
-                                headerInfo.setEnabled(false);
-                            }
-                        }
-                    });
-                    //initializing a button to delete a header
-                    delBtn = new JButton("DEL");
-                    delBtn.addActionListener(new RemoveHandler());
-                    add(Box.createRigidArea(new Dimension(5, 0)));
-                    add(key);
-                    add(Box.createRigidArea(new Dimension(10, 0)));
-                    add(value);
-                    add(Box.createRigidArea(new Dimension(5, 0)));
-                    add(checkBox);
-                    add(Box.createRigidArea(new Dimension(5, 0)));
-                    add(delBtn);
-                    add(Box.createRigidArea(new Dimension(5, 0)));
-                    this.headerInfo = headerInfo;
-                }
-
-                public boolean isLast() {
-                    return isLast;
-                }
-
-                public void setIsLast(boolean isLast) {
-                    this.isLast = isLast;
-                }
-
-                private class RemoveHandler implements ActionListener {
-                    /**
-                     * Invoked when an action occurs.
-                     *
-                     * @param e
-                     */
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        int chosenOption = JOptionPane.showConfirmDialog(null, "Are you sure ?",
-                                "WARNING", JOptionPane.YES_NO_OPTION);
-                        if (chosenOption == JOptionPane.YES_OPTION) {
-                            list.remove(headerInfo);
-                            HeaderPanel.this.remove(HeaderBox.this);
-                            HeaderBox lastBox = (HeaderBox) HeaderPanel.this.
-                                    getComponent(HeaderPanel.this.getComponentCount() - 1);
-                            lastBox.setIsLast(true);
-                            HeaderPanel.this.repaint();
-                            HeaderPanel.this.revalidate();
-                        }
-                        //there should be sth handle the situation which there is no header
-                    }
-                }
-
-                private class SaveDataHandler extends FocusAdapter {
-                    /**
-                     * Invoked when a component loses the keyboard focus.
-                     *
-                     * @param e
-                     */
-                    @Override
-                    public void focusLost(FocusEvent e) {
-                        try{
-                            JTextField textField = (JTextField) e.getSource();
-                            if (!textField.getText().isEmpty()) {
-                                if (e.getSource() == key) {
-                                    headerInfo.setKey(textField.getText());
-                                } else if (e.getSource() == value) {
-                                    headerInfo.setValue(textField.getText());
-                                }
-                                if (headerInfo.isCompleted()) {
-                                    request.addHeaderInfo(headerInfo);
-                                    System.out.println(request.getHeaders());
-                                }
-                            }
-                        }catch (ClassCastException exception){
-
-                        }
-
-                    }
-                }
-
-            }
+            private HashMap<Info, InfoBox> headerList;
 
             public HeaderPanel() {
                 setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-                add(Box.createRigidArea(new Dimension(100, 10)));
-                list = new HashMap<>();
-                HeaderInfo firstHeader = new HeaderInfo();
-                HeaderBox firstHeaderBox = new HeaderBox(firstHeader);
+                headerList = new HashMap<>();
+
+                //initialize first info and headerBox
+                Info firstHeader = new Info();
+                InfoBox firstHeaderBox = new InfoBox(firstHeader);
                 firstHeaderBox.setIsLast(true);
-                list.put(firstHeader, firstHeaderBox);
-                add(list.get(firstHeader));
+                addListeners(firstHeaderBox,headerList, HeaderPanel.this);
+                headerList.put(firstHeader, firstHeaderBox);
+
+                //add components to panel
+                add(Box.createRigidArea(new Dimension(100, 10)));
+                add(headerList.get(firstHeader));
             }
 
-            private class AutomaticAddingHandler extends MouseAdapter {
-                /**
-                 * {@inheritDoc}
-                 *
-                 * @param
-                 */
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    JTextField textField = (JTextField) e.getSource();
-                    textField.grabFocus();
-                    HeaderBox header = (HeaderBox) textField.getParent();
-                    if (header.isLast()) {
-                        header.setIsLast(false);
-                        HeaderInfo newHeader = new HeaderInfo();
-                        HeaderBox newHeaderBox = new HeaderBox(newHeader);
-                        newHeaderBox.setIsLast(true);
-                        list.put(newHeader, newHeaderBox);
-                        add(list.get(newHeader));
-                        repaint();
-                        revalidate();
-                    }
+            public HashMap<Info, InfoBox> getHeaderList() {
+                return headerList;
+            }
+        }
+        //----------------------------------------------------------------------------
+        public void addListeners(InfoBox infoBox,HashMap<Info,InfoBox>list,JPanel parentPanel) {
+            //getting components from infoBox
+            JTextField key = infoBox.getKey();
+            JTextField value = infoBox.getValue();
+            JButton delBtn = infoBox.getDelBtn();
+
+            //adding listeners to them
+            key.addFocusListener(new SaveToRequest());
+            key.addMouseListener(new AutomaticAddingHandler(list,parentPanel));
+
+            value.addFocusListener(new SaveToRequest());
+            value.addMouseListener(new AutomaticAddingHandler(list,parentPanel));
+
+            delBtn.addActionListener(new RemoveHandler(infoBox,list,parentPanel));
+        }
+
+        public class AutomaticAddingHandler extends MouseAdapter {
+            private HashMap<Info,InfoBox>list;
+            private JPanel parentPanel;
+            public AutomaticAddingHandler(HashMap<Info,InfoBox> list,JPanel parentPanel){
+                this.list=list;
+                this.parentPanel=parentPanel;
+            }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                JTextField textField = (JTextField) e.getSource();
+                InfoBox infoBox = (InfoBox) textField.getParent();
+
+                parentPanel.grabFocus();
+                textField.grabFocus();
+
+                if (infoBox.isLast()) {
+                    infoBox.setIsLast(false);
+                    Info newInfo = new Info();
+                    InfoBox newInfoBox = new InfoBox(newInfo);
+                    addListeners(newInfoBox,list,parentPanel);
+                    newInfoBox.setIsLast(true);
+                    list.put(newInfo, newInfoBox);
+                    parentPanel.add(list.get(newInfo));
+                    parentPanel.repaint();
+                    parentPanel.revalidate();
                 }
             }
+        }
 
+        private class RemoveHandler implements ActionListener {
+            private InfoBox infoBox;
+            private HashMap<Info, InfoBox> list;
+            private JPanel parentPanel;
 
+            public RemoveHandler(InfoBox infoBox, HashMap<Info, InfoBox> list, JPanel parentPanel) {
+                this.infoBox = infoBox;
+                this.list = list;
+                this.parentPanel = parentPanel;
+
+            }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int chosenOption = JOptionPane.showConfirmDialog(null, "Are you sure ?",
+                        "WARNING", JOptionPane.YES_NO_OPTION);
+                if (chosenOption == JOptionPane.YES_OPTION) {
+                    list.remove(infoBox.getInfo());
+                    parentPanel.remove(infoBox);
+                    InfoBox lastBox = (InfoBox) parentPanel.getComponent(parentPanel.getComponentCount() - 1);
+                    lastBox.setIsLast(true);
+                    parentPanel.repaint();
+                    parentPanel.revalidate();
+                }
+                //there should be sth handle the situation which there is no header ->        serious BUG shit
+            }
+        }
+
+        private class SaveToRequest extends FocusAdapter {
+            @Override
+            public void focusLost(FocusEvent e) {
+                JTextField textField = (JTextField) e.getSource();
+                InfoBox infoBox = (InfoBox) textField.getParent();
+                if (infoBox.getInfo().isCompleted())
+                    if(infoBox.getParent() instanceof HeaderPanel)
+                        request.addHeaderInfo(infoBox.getInfo());
+                    else
+                        request.addDataInfo(infoBox.getInfo());
+            }
+        }
+        //-----------------------------------------------------------------------------
+        private class FormData extends JPanel {
+            private HashMap<Info, InfoBox> formDataList;
+            public FormData(){
+                //setting panel attribute
+                setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+                formDataList=new HashMap<>();
+
+                //adding first formData
+                Info firstForm=new Info();
+                InfoBox firstFormBox=new InfoBox(firstForm);
+                firstFormBox.setIsLast(true);
+                formDataList.put(firstForm,firstFormBox);
+                addListeners(firstFormBox,formDataList,FormData.this);
+
+                //adding components to panel
+                add(Box.createRigidArea(new Dimension(1000,25)));
+                add(formDataList.get(firstForm));
+            }
         }
 
         //-----------------------------------------------------------------------------
-        private class FormData extends JPanel {
-
-        }
-
         private class JsonPanel extends JPanel {
             private JEditorPane editor;
             private TextLineNumber lineNumber;

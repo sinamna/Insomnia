@@ -1,6 +1,4 @@
-import javax.sound.sampled.Clip;
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -192,7 +190,7 @@ public class ResponsePanel extends JPanel {
 
         }
         private void createHeaderPanels(){
-            for(HeaderInfo header:response.getHeaders()){
+            for(Info header:response.getHeaders()){
                 if(header.getState())
                     add(new HeaderBox(header.getKey(),header.getValue()));
             }
@@ -231,7 +229,7 @@ public class ResponsePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 StringBuilder headersCopy=new StringBuilder();
-                for(HeaderInfo header:response.getHeaders()){
+                for(Info header:response.getHeaders()){
                     if(header.getState())
                         headersCopy.append(header.toString());
                 }

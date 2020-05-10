@@ -132,7 +132,8 @@ public class RequestListPanel extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String requestName = requestNameField.getText();
-                    Request newRequest = new Request(requestName,(String)methodOptions.getSelectedItem());
+                    String selectedMethod=(String)methodOptions.getSelectedItem();
+                    Request newRequest = new Request(requestName,selectedMethod);
                     requestsModel.addElement(newRequest);
                     addDialog.dispose();
                 }
@@ -145,9 +146,7 @@ public class RequestListPanel extends JPanel {
                 Request request = (Request) list.getSelectedValue();
                 reqAndResponseSplit.removeAll();
                 reqAndResponseSplit.setLeftComponent(request.getRequestPanel());
-                if(request.getRequestPanel().isRequestSent())
-                    reqAndResponseSplit.setRightComponent(request.getResponsePanel());
-                else
+                if(!request.getRequestPanel().isRequestSent())
                     reqAndResponseSplit.setRightComponent(View.createVoidPanel());
                 request.getRequestPanel().setSplitPane(reqAndResponseSplit);
                 reqAndResponseSplit.setResizeWeight(0.5);
