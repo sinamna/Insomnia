@@ -1,20 +1,28 @@
+import javax.swing.*;
 import java.util.ArrayList;
 
 public class Request {
     private RequestPanel requestPanel;
     private ResponsePanel responsePanel;
+//    private JSplitPane reqAndResponseSplit;
     private String requestName;
     private String url;
     private String option;
     private ArrayList<HeaderInfo> headers;
+//    private ArrayList
     public Request(String requestName,String option){
         requestPanel=new RequestPanel(this);
-        responsePanel=new ResponsePanel();
+
         this.requestName=requestName;
         this.option=option;
         headers=new ArrayList<>();
 
     }
+
+//    public JSplitPane getReqAndResponseSplit() {
+//        return reqAndResponseSplit;
+//    }
+
     public RequestPanel getRequestPanel() {
         return requestPanel;
     }
@@ -40,6 +48,10 @@ public class Request {
 
     public ArrayList<HeaderInfo> getHeaders() {
         return headers;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
     @Override

@@ -3,23 +3,22 @@ import java.awt.*;
 
 public class View {
     private RequestListPanel listPanel;
-    JSplitPane mainBody,reqAndResponse;
+    JSplitPane mainBody, reqAndResponseSplit;
     JFrame frame;
     public View (){
         setUi();
         frame=new JFrame("HTTP Client");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        reqAndResponse=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,createVoidPanel(),createVoidPanel());
-        listPanel=new RequestListPanel(reqAndResponse);
-        mainBody=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,listPanel,reqAndResponse);
+        reqAndResponseSplit =new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,createVoidPanel(),createVoidPanel());
+        listPanel=new RequestListPanel(reqAndResponseSplit);
+        mainBody=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,listPanel, reqAndResponseSplit);
         frame.add(mainBody);
         frame.pack();
         frame.setVisible(true);
 
     }
-    private JPanel createVoidPanel(){
+    public static JPanel createVoidPanel(){
         JPanel voidPanel=new JPanel();
-        voidPanel.setLayout(new CardLayout());
         voidPanel.setPreferredSize(new Dimension(370,550));
         voidPanel.setMinimumSize(new Dimension(100,400));
         return voidPanel;

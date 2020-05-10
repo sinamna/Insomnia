@@ -1,37 +1,40 @@
 import Insomnia.TextLineNumber;
 
 import javax.swing.*;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashMap;
 
 public class RequestPanel extends JPanel {
     private Request request;
+    private JSplitPane splitPane;
+    private boolean requestSent;
 
     public RequestPanel(Request request) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.request = request;
+        requestSent = false;
         setPreferredSize(new Dimension(370, 550));
         setMinimumSize(new Dimension(100, 400));
         UpperPanel upperPanel = new UpperPanel();
         add(upperPanel, BorderLayout.PAGE_START);
         CenterPanel centerPanel = new CenterPanel();
         add(centerPanel, BorderLayout.CENTER);
-
     }
 
     private class UpperPanel extends JPanel {
         String[] options;
         private JComboBox methodList;
-        JTextField urlTxt;
+        JTextField urlText;
         JButton sendBtn;
 
         public UpperPanel() {
+            //setting panel's attributes
             setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
             setMaximumSize(new Dimension(1000, 40));
             setBackground(Color.WHITE);
+
+            //creating comboBox
             options = new String[]{"GET", "DELETE", "POST", "PUT", "PATCH"};
             methodList = new JComboBox(options);
             methodList.setPreferredSize(new Dimension(70, 30));
@@ -44,31 +47,49 @@ public class RequestPanel extends JPanel {
                     updateUI();
                 }
             });
-            add(methodList);
-            urlTxt = new JTextField("https://api.myproduct.com/v1/users");
-            urlTxt.addFocusListener(new FocusAdapter() {
+
+            //creating textField for url
+            urlText = new JTextField("https://api.myproduct.com/v1/users");
+            urlText.addFocusListener(new FocusAdapter() {
                 @Override
                 public void focusLost(FocusEvent e) {
-                    request.setUrl(urlTxt.getText());
+                    request.setUrl(urlText.getText());
+                    System.out.println(request.getUrl());
                 }
             });
-            urlTxt.setMinimumSize(new Dimension(100, 40));
-            add(urlTxt);
+            urlText.setMinimumSize(new Dimension(100, 40));
+
+            //creating button for sending request
             sendBtn = new JButton("Send");
+            sendBtn.addActionListener(new SendBtnHandler());
             sendBtn.setMinimumSize(new Dimension(30, 40));
+
+            //adding components to the panel
+            add(methodList);
+            add(urlText);
             add(sendBtn);
         }
 
-        private int findDefaultSelection(String option) {
-            int index = 0;
-            for (String currentOP : options) {
-                if (currentOP.equals(option))
-                    break;
-                index++;
+        private class SendBtnHandler implements ActionListener {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Response newResponse=new Response(request.getHeaders());
+                splitPane.setRightComponent(newResponse.getResponsePanel());
+                splitPane.updateUI();
+                requestSent = true;
             }
-            return index;
         }
     }
+//        private int findDefaultSelection(String option) {
+//            int index = 0;
+//            for (String currentOP : options) {
+//                if (currentOP.equals(option))
+//                    break;
+//                index++;
+//            }
+//            return index;
+//        }
+//    }
 
     //------------------------------------------------------------------------------------------------
     private class CenterPanel extends JPanel {
@@ -93,25 +114,31 @@ public class RequestPanel extends JPanel {
             menuBar.setMaximumSize(new Dimension(370, 40));
             add(menuBar, BorderLayout.NORTH);
 
+            // creating main panel with card Layout
+            mainPanel = new JPanel();
+            layout = new CardLayout();
+            mainPanel.setLayout(layout);
+            add(mainPanel, BorderLayout.CENTER);
+
             //the body menu
             bodyMenu = new JMenu("Body");
             JMenuItem formDataItem = new JMenuItem("Form Data");
-            formDataItem.addActionListener(new MenuItemHandler());
+            formDataItem.addActionListener(new MenuHandler.MenuItemHandler(layout,mainPanel));
             JMenuItem jsonItem = new JMenuItem("JSON");
-            jsonItem.addActionListener(new MenuItemHandler());
+            jsonItem.addActionListener(new MenuHandler.MenuItemHandler(layout,mainPanel));
             bodyMenu.add(formDataItem);
             bodyMenu.add(jsonItem);
             menuBar.add(bodyMenu);
 
             //header Menu
             headerMenu = new JMenu("Header");
-            headerMenu.addMenuListener(new MenuSelectionHandler());
+            headerMenu.addMenuListener(new MenuHandler.MenuSelectionHandler(layout,mainPanel));
             menuBar.add(headerMenu);
 
             //Auth Menu
             authMenu = new JMenu("Auth");
             JMenuItem bearerItem = new JMenuItem("Bearer");
-            bearerItem.addActionListener(new MenuItemHandler());
+            bearerItem.addActionListener(new MenuHandler.MenuItemHandler(layout,mainPanel));
             authMenu.add(bearerItem);
             menuBar.add(authMenu);
 
@@ -119,11 +146,7 @@ public class RequestPanel extends JPanel {
             query = new JMenu("Query");
             menuBar.add(query);
 
-            // creating main panel with card Layout
-            mainPanel = new JPanel();
-            layout = new CardLayout();
-            mainPanel.setLayout(layout);
-            add(mainPanel, BorderLayout.CENTER);
+
 
             //creating menu items panel
             formDataPanel = new FormData();
@@ -138,52 +161,8 @@ public class RequestPanel extends JPanel {
             mainPanel.add(bearer, "Bearer");
         }
 
-        /**
-         * flips specified panel card to the top in layout
-         */
-        private class MenuItemHandler implements ActionListener {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JMenuItem menuItem = (JMenuItem) e.getSource();
-                layout.show(mainPanel, menuItem.getText());
-            }
-        }
-
-        private class MenuSelectionHandler implements MenuListener {
-            /**
-             * Invoked when a menu is selected.
-             *
-             * @param e a MenuEvent object
-             */
-            @Override
-            public void menuSelected(MenuEvent e) {
-                JMenu menu = (JMenu) e.getSource();
-                layout.show(mainPanel, menu.getText());
-            }
-
-            /**
-             * Invoked when the menu is deselected.
-             *
-             * @param e a MenuEvent object
-             */
-            @Override
-            public void menuDeselected(MenuEvent e) {
-
-            }
-
-            /**
-             * Invoked when the menu is canceled.
-             *
-             * @param e a MenuEvent object
-             */
-            @Override
-            public void menuCanceled(MenuEvent e) {
-
-            }
-        }
-
         //---------------------------------------------------------------------
-        public class HeaderPanel extends JPanel {
+        private class HeaderPanel extends JPanel {
             private HashMap<HeaderInfo, JPanel> list;
 
             private class HeaderBox extends JPanel {
@@ -281,18 +260,23 @@ public class RequestPanel extends JPanel {
                      */
                     @Override
                     public void focusLost(FocusEvent e) {
-                        JTextField textField = (JTextField) e.getSource();
-                        if (!textField.getText().isEmpty()) {
-                            if (e.getSource() == key) {
-                                headerInfo.setKey(textField.getText());
-                            } else if (e.getSource() == value) {
-                                headerInfo.setValue(textField.getText());
+                        try{
+                            JTextField textField = (JTextField) e.getSource();
+                            if (!textField.getText().isEmpty()) {
+                                if (e.getSource() == key) {
+                                    headerInfo.setKey(textField.getText());
+                                } else if (e.getSource() == value) {
+                                    headerInfo.setValue(textField.getText());
+                                }
+                                if (headerInfo.isCompleted()) {
+                                    request.addHeaderInfo(headerInfo);
+                                    System.out.println(request.getHeaders());
+                                }
                             }
-                            if (headerInfo.isCompleted()) {
-                                request.addHeaderInfo(headerInfo);
-                                System.out.println(request.getHeaders());
-                            }
+                        }catch (ClassCastException exception){
+
                         }
+
                     }
                 }
 
@@ -408,5 +392,13 @@ public class RequestPanel extends JPanel {
             panel.add(Box.createRigidArea(new Dimension(10, 30)));
             return panel;
         }
+    }
+
+    public void setSplitPane(JSplitPane splitPane) {
+        this.splitPane = splitPane;
+    }
+
+    public boolean isRequestSent() {
+        return requestSent;
     }
 }

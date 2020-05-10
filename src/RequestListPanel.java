@@ -9,22 +9,22 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 public class RequestListPanel extends JPanel {
-    JSplitPane reqAndResponse;
+    JSplitPane reqAndResponseSplit;
 
-    public RequestListPanel(JSplitPane reqAndResponse) {
+    public RequestListPanel(JSplitPane reqAndResponseSplit) {
         super(new BorderLayout());
         setPreferredSize(new Dimension(230, 500));
         setMinimumSize(new Dimension(100, 400));
-        this.reqAndResponse = reqAndResponse;
-        JPanel namePanel = new JPanel();
-        JTextField programName = new JTextField("HTTP Client");
+        this.reqAndResponseSplit = reqAndResponseSplit;
+        JPanel namePanel = new JPanel(new BorderLayout());
+        JTextArea programName = new JTextArea("HTTP Client");
         programName.setEditable(false);
         namePanel.add(programName, BorderLayout.CENTER);
         add(namePanel, BorderLayout.PAGE_START);
         ListPanel listPanel = new ListPanel();
         add(new JScrollPane(listPanel), BorderLayout.CENTER);
     }
-
+//----------------------------------------------------------------------------
     private class ListPanel extends JPanel {
         JButton addRequestBtn;
         DefaultListModel<Request> requestsModel;
@@ -33,14 +33,20 @@ public class RequestListPanel extends JPanel {
 
         public ListPanel() {
             super(new BorderLayout());
+            // add request Button
             addRequestBtn = new JButton("Add Request");
             addRequestBtn.addActionListener(new NewRequestHandler());
-            add(addRequestBtn, BorderLayout.NORTH);
+
+
+            // the list of requests
             requestsModel = new DefaultListModel<>();
             list = new JList<>(requestsModel);
             list.setCellRenderer(new ListItemRenderer());
             list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             list.addListSelectionListener(new ChosenRequestHandler());
+
+            //adding components to the panel
+            add(addRequestBtn, BorderLayout.NORTH);
             add(list, BorderLayout.CENTER);
         }
 
@@ -54,24 +60,47 @@ public class RequestListPanel extends JPanel {
             private JLabel nameLabel;
             @Override
             public void actionPerformed(ActionEvent e) {
+                // create JDialog
                 addDialog = new JDialog();
                 addDialog.setLayout(new BoxLayout(addDialog.getContentPane(),BoxLayout.Y_AXIS));
+                addDialog.setSize(800,200);
+                addDialog.setVisible(true);
+                addDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+                //create panel and its components
                 addPanel =new JPanel();
                 addPanel.setLayout(new BoxLayout(addPanel,BoxLayout.X_AXIS));
+
+                //creating the label
                 nameLabel=new JLabel("Name:");
                 nameLabel.setPreferredSize(new Dimension(100,50));
                 nameLabel.setMaximumSize(new Dimension(70,50));
-                addPanel.add(nameLabel);
+
+
+                //creating the textField for name of request
                 requestNameField = new JTextField();
                 requestNameField.addKeyListener(this);
                 requestNameField.setMaximumSize(new Dimension(500,50));
-                addPanel.add(requestNameField);
-                addPanel.add(Box.createRigidArea(new Dimension(30,50)));
+
+
+
+                //creating Combo Box
                 options= new String[]{"GET", "DELETE", "POST", "PUT", "PATCH"};
                 methodOptions=new JComboBox<>(options);
                 methodOptions.setMaximumSize(new Dimension(100,50));
-                addPanel.add(methodOptions);
+
+
+                //creating "create Button"
                 createBtn = new JButton("Create");
+                createBtn.addActionListener(new CreateRequestHandler());
+
+                //adding components to addPanel
+                addPanel.add(nameLabel);
+                addPanel.add(requestNameField);
+                addPanel.add(Box.createRigidArea(new Dimension(30,50)));
+                addPanel.add(methodOptions);
+
+                //creating components to add dialog and adding blank spaces
                 addDialog.add(Box.createRigidArea(new Dimension(500,30)));
                 addDialog.add(addPanel);
                 addDialog.add(Box.createRigidArea(new Dimension (100,20)));
@@ -84,13 +113,8 @@ public class RequestListPanel extends JPanel {
                        setMinimumSize(this.getPreferredSize());
                        setMaximumSize(this.getPreferredSize());
                        add(createBtn);
-                       //setBorder(BorderFactory.createLineBorder(Color.black));
                     }
                 });
-                addDialog.setSize(800,200);
-                addDialog.setVisible(true);
-                addDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                createBtn.addActionListener(new CreateRequestHandler());
             }
 
             @Override
@@ -108,7 +132,6 @@ public class RequestListPanel extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String requestName = requestNameField.getText();
-                    //System.out.println(requestName);
                     Request newRequest = new Request(requestName,(String)methodOptions.getSelectedItem());
                     requestsModel.addElement(newRequest);
                     addDialog.dispose();
@@ -119,13 +142,18 @@ public class RequestListPanel extends JPanel {
         private class ChosenRequestHandler implements ListSelectionListener {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-               // if()
                 Request request = (Request) list.getSelectedValue();
-                reqAndResponse.removeAll();
-                reqAndResponse.setLeftComponent(request.getRequestPanel());
-                reqAndResponse.setRightComponent(request.getResponsePanel());
-                reqAndResponse.setResizeWeight(0.5);
-                reqAndResponse.updateUI();
+                reqAndResponseSplit.removeAll();
+                reqAndResponseSplit.setLeftComponent(request.getRequestPanel());
+                if(request.getRequestPanel().isRequestSent())
+                    reqAndResponseSplit.setRightComponent(request.getResponsePanel());
+                else
+                    reqAndResponseSplit.setRightComponent(View.createVoidPanel());
+                request.getRequestPanel().setSplitPane(reqAndResponseSplit);
+                reqAndResponseSplit.setResizeWeight(0.5);
+                reqAndResponseSplit.repaint();
+                reqAndResponseSplit.revalidate();
+                reqAndResponseSplit.updateUI();
             }
         }
 

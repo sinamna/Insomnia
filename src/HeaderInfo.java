@@ -35,6 +35,6 @@ public class HeaderInfo {
 
     @Override
     public String toString() {
-        return getKey()+"-"+getValue()+"-"+getState();
+        return "Key: "+getKey()+" - Value: "+getValue()+"\n";
     }
 }
