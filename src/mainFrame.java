@@ -10,21 +10,24 @@ public class mainFrame extends JFrame{
     private JMenu helpMenu;
     private boolean hideInTray;
     private boolean followRedirect;
-//    private GraphicsEnvironment env;
-//    private GraphicsDevice device;
-    JSplitPane mainBody, reqAndResponseSplit;
+    private boolean isFullScreen;
+    private Dimension lastSize;
+    private GraphicsEnvironment env;
+    private GraphicsDevice device;
+    private JSplitPane mainBody, reqAndResponseSplit;
     public mainFrame(){
         //setting frame's attributes
         super("Insomnia");
-//        env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//        device = env.getDefaultScreenDevice();
         setUi();
         ImageIcon frameIcon=new ImageIcon("media\\insomnia_Icon.png");
         setIconImage(frameIcon.getImage());
         addWindowListener(new MonitorCloseOperation(this));
-//        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        device = env.getDefaultScreenDevice();
         followRedirect=false;
         hideInTray=false;
+        isFullScreen=false;
+        lastSize=getBounds().getSize();
 
         //creating application menu
         applicationMenu=new JMenu("Application");
@@ -50,12 +53,9 @@ public class mainFrame extends JFrame{
         JMenuItem toggleFullScreenItem=new JMenuItem("Toggle Full Screen");
         toggleFullScreenItem.setMnemonic('F');//set mnemonic to 'T'
         toggleFullScreenItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F,ActionEvent.CTRL_MASK));
-        toggleFullScreenItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mainFrame.this.setExtendedState(mainFrame.this.getExtendedState()|JFrame.MAXIMIZED_BOTH);
-            }
-        });
+        toggleFullScreenItem.addActionListener(new ToggleFullScreen());
+
+        //toggleSideBar
         JMenuItem toggleSidebarItem=new JMenuItem("Toggle Sidebar");
         toggleSidebarItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,ActionEvent.CTRL_MASK));
         toggleSidebarItem.setMnemonic('S');//set mnemonic to 'S'
@@ -93,10 +93,35 @@ public class mainFrame extends JFrame{
         //adding components to the frame
         setJMenuBar(menuBar);
         add(mainBody);
-//        pack();
         setSize(new Dimension(1000,470));
         setVisible(true);
 
+    }
+    private class ToggleFullScreen implements ActionListener{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(isFullScreen){
+                device.setFullScreenWindow(null);
+//                mainFrame.this.dispose();
+//                JFrame newFrame=new JFrame("Insomnia");
+                setVisible(true);
+                mainFrame.this.setSize(lastSize);
+                isFullScreen=false;
+            }else{
+                //saving the info
+                isFullScreen=true;
+                lastSize=getBounds().getSize();
+                setExtendedState(JFrame.MAXIMIZED_BOTH);
+//            setUndecorated(true);
+//                setResizable(false);
+                validate();
+//                device.setFullScreenWindow(mainFrame.this);
+
+
+
+            }
+
+        }
     }
     private class AboutMenuItemHandler implements ActionListener{
         @Override
