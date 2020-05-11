@@ -156,7 +156,7 @@ public class RequestPanel extends JPanel {
             bearer = new AuthPanel();
 
             //adding panels to mainPanel
-            mainPanel.add(formDataPanel, "Form Data");
+            mainPanel.add(new JScrollPane(formDataPanel), "Form Data");
             mainPanel.add(jsonPanel, "JSON");
             mainPanel.add(new JScrollPane(headerPanel), "Header");
             mainPanel.add(bearer, "Bearer");
@@ -228,6 +228,7 @@ public class RequestPanel extends JPanel {
                     parentPanel.add(list.get(newInfo));
                     parentPanel.repaint();
                     parentPanel.revalidate();
+                    parentPanel.updateUI();
                 }
             }
         }
@@ -287,7 +288,7 @@ public class RequestPanel extends JPanel {
                 addListeners(firstFormBox,formDataList,FormData.this);
 
                 //adding components to panel
-                add(Box.createRigidArea(new Dimension(1000,25)));
+                add(Box.createRigidArea(new Dimension(100,25)));
                 add(formDataList.get(firstForm));
             }
         }

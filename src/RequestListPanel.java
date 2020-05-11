@@ -13,8 +13,8 @@ public class RequestListPanel extends JPanel {
 
     public RequestListPanel(JSplitPane reqAndResponseSplit) {
         super(new BorderLayout());
-        setPreferredSize(new Dimension(230, 470));
-        setMinimumSize(new Dimension(100, 400));
+        setPreferredSize(new Dimension(300, 470));
+        setMinimumSize(new Dimension(200, 400));
         this.reqAndResponseSplit = reqAndResponseSplit;
         JPanel namePanel = new JPanel(new BorderLayout());
         JTextArea programName = new JTextArea("HTTP Client");

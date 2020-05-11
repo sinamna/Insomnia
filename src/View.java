@@ -1,13 +1,12 @@
 import com.sun.xml.internal.ws.api.model.wsdl.WSDLOutput;
+import javafx.beans.property.adapter.JavaBeanDoubleProperty;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
+import java.io.File;
 
-public class View {
+public class View extends JFrame{
     private RequestListPanel listPanel;
     private JMenuBar menuBar;
     private JMenu applicationMenu;
@@ -19,15 +18,21 @@ public class View {
     JFrame frame;
     public View (){
         //setting frame's attributes
+        super("Insomnia");
         setUi();
-        frame=new JFrame("Insomnia");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        ImageIcon frameIcon=new ImageIcon("media\\insomnia_Icon.png");
+        setIconImage(frameIcon.getImage());
+        System.out.println(System.getProperty("user.dir"));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         followRedirect=false;
         hideInTray=false;
 
         //creating application menu
         applicationMenu=new JMenu("Application");
+        applicationMenu.setMnemonic('A');//set mnemonic to 'A'
         JMenuItem optionsItem=new JMenuItem("Options");
+        optionsItem.setMnemonic('O');//set mnemonic to 'O'
+        optionsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,ActionEvent.CTRL_MASK));
         optionsItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -35,20 +40,42 @@ public class View {
             }
         });
         JMenuItem exitItem=new JMenuItem("Exit");
+        exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X,ActionEvent.CTRL_MASK));
+        exitItem.setMnemonic('X');//set mnemonic to X
         applicationMenu.add(optionsItem);
         applicationMenu.add(exitItem);
 
         //creating View menu
         viewMenu=new JMenu("View");
+        viewMenu.setMnemonic('V');//set mnemonic to 'V'
         JMenuItem toggleFullScreenItem=new JMenuItem("Toggle Full Screen");
+        toggleFullScreenItem.setMnemonic('F');//set mnemonic to 'T'
+        toggleFullScreenItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F,ActionEvent.CTRL_MASK));
+        toggleFullScreenItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                View.this.setExtendedState(View.this.getExtendedState()|JFrame.MAXIMIZED_BOTH);
+            }
+        });
         JMenuItem toggleSidebarItem=new JMenuItem("Toggle Sidebar");
+        toggleSidebarItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,ActionEvent.CTRL_MASK));
+        toggleSidebarItem.setMnemonic('S');//set mnemonic to 'S'
         viewMenu.add(toggleFullScreenItem);
         viewMenu.add(toggleSidebarItem);
 
         //creating help menu
         helpMenu=new JMenu("Help");
+        helpMenu.setMnemonic('M');//set mnemonic to 'M'
         JMenuItem aboutItem=new JMenuItem("About");
+        aboutItem.setMnemonic('A');//set mnemonic to 'A'
+        aboutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A,ActionEvent.CTRL_MASK));
+        aboutItem.addActionListener(new AboutMenuItemHanlder());
+
+        //help menuItem
         JMenuItem helpItem=new JMenuItem("Help");
+        helpItem.setMnemonic('H');//set mnemonic to H
+        helpItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H,ActionEvent.CTRL_MASK));
+        helpItem.addActionListener(new HelpMenuItemHandler());
         helpMenu.add(aboutItem);
         helpMenu.add(helpItem);
 
@@ -60,15 +87,80 @@ public class View {
 
         //creating splitPanes
         reqAndResponseSplit =new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,createVoidPanel(),createVoidPanel());
+        reqAndResponseSplit.setResizeWeight(0.5);
         listPanel=new RequestListPanel(reqAndResponseSplit);
         mainBody=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,listPanel, reqAndResponseSplit);
 
         //adding components to the frame
-        frame.setJMenuBar(menuBar);
-        frame.add(mainBody);
-        frame.pack();
-        frame.setVisible(true);
+        setJMenuBar(menuBar);
+        add(mainBody);
+//        pack();
+        setSize(new Dimension(1000,470));
+        setVisible(true);
 
+    }
+    private class AboutMenuItemHanlder implements ActionListener{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            new JDialog(){
+                {
+                    //setting JDialog's attributes
+                    setTitle("About");
+                    setSize(new Dimension(350,450));
+                    setLayout(new BorderLayout());
+                    setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                    setLocationRelativeTo(frame);
+                    setVisible(true);
+
+                    //adding components
+                    add(new JPanel(){
+                        JLabel email;
+                        JLabel studentID;
+                        {
+                            setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+                            //creating JtextFields
+                            email=new JLabel("Sina3050@gmail.com");
+                            email.setBackground(Color.white);
+                            email.setHorizontalAlignment(JTextField.CENTER);
+                            studentID=new JLabel("Student ID: 9831009");
+                            studentID.setBackground(Color.WHITE);
+                            studentID.setHorizontalAlignment(JTextField.CENTER);
+
+                            //adding components to the panel
+                            add(Box.createRigidArea(new Dimension(100,150)));
+                            add(email);
+                            add(studentID);
+                        }
+                    });
+
+                }
+            };
+        }
+    }
+    private class HelpMenuItemHandler implements ActionListener{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            new JDialog(){
+                JTextArea helpText;
+                {
+                    //setting JDialogs attributes
+                    setTitle("Help");
+                    setSize(new Dimension(350,450));
+                    setLayout(new BorderLayout());
+                    setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                    setLocationRelativeTo(frame);
+                    setVisible(true);
+
+                    //creating fields
+                    helpText=new JTextArea();
+                    helpText.setEditable(false);
+                    helpText.setText(" the helping-text ");
+
+                    //adding component to JDialog
+                    add(helpText,BorderLayout.CENTER);
+                }
+            };
+        }
     }
     private void loadSettings(){
 
@@ -109,8 +201,8 @@ public class View {
             //creating hideOptionPanel
             hideInTrayLabel=new JLabel("Hide in Tray");
             hideCheckBox=new JCheckBox();
-            //adding item listener
 
+            //adding item listener
             hideCheckBox.addItemListener(new ItemListener() {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
