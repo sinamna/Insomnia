@@ -13,7 +13,7 @@ public class RequestListPanel extends JPanel {
 
     public RequestListPanel(JSplitPane reqAndResponseSplit) {
         super(new BorderLayout());
-        setPreferredSize(new Dimension(230, 500));
+        setPreferredSize(new Dimension(230, 470));
         setMinimumSize(new Dimension(100, 400));
         this.reqAndResponseSplit = reqAndResponseSplit;
         JPanel namePanel = new JPanel(new BorderLayout());
@@ -62,6 +62,8 @@ public class RequestListPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // create JDialog
                 addDialog = new JDialog();
+                addDialog.setTitle("New Request");
+                addDialog.setLocationRelativeTo(RequestListPanel.this);
                 addDialog.setLayout(new BoxLayout(addDialog.getContentPane(),BoxLayout.Y_AXIS));
                 addDialog.setSize(800,200);
                 addDialog.setVisible(true);
