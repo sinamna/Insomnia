@@ -1,12 +1,8 @@
-import com.sun.xml.internal.ws.api.model.wsdl.WSDLOutput;
-import javafx.beans.property.adapter.JavaBeanDoubleProperty;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
 
-public class View extends JFrame{
+public class mainFrame extends JFrame{
     private RequestListPanel listPanel;
     private JMenuBar menuBar;
     private JMenu applicationMenu;
@@ -14,16 +10,19 @@ public class View extends JFrame{
     private JMenu helpMenu;
     private boolean hideInTray;
     private boolean followRedirect;
+//    private GraphicsEnvironment env;
+//    private GraphicsDevice device;
     JSplitPane mainBody, reqAndResponseSplit;
-    JFrame frame;
-    public View (){
+    public mainFrame(){
         //setting frame's attributes
         super("Insomnia");
+//        env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+//        device = env.getDefaultScreenDevice();
         setUi();
         ImageIcon frameIcon=new ImageIcon("media\\insomnia_Icon.png");
         setIconImage(frameIcon.getImage());
-        System.out.println(System.getProperty("user.dir"));
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        addWindowListener(new MonitorCloseOperation(this));
+//        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         followRedirect=false;
         hideInTray=false;
 
@@ -54,7 +53,7 @@ public class View extends JFrame{
         toggleFullScreenItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                View.this.setExtendedState(View.this.getExtendedState()|JFrame.MAXIMIZED_BOTH);
+                mainFrame.this.setExtendedState(mainFrame.this.getExtendedState()|JFrame.MAXIMIZED_BOTH);
             }
         });
         JMenuItem toggleSidebarItem=new JMenuItem("Toggle Sidebar");
@@ -69,7 +68,7 @@ public class View extends JFrame{
         JMenuItem aboutItem=new JMenuItem("About");
         aboutItem.setMnemonic('A');//set mnemonic to 'A'
         aboutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A,ActionEvent.CTRL_MASK));
-        aboutItem.addActionListener(new AboutMenuItemHanlder());
+        aboutItem.addActionListener(new AboutMenuItemHandler());
 
         //help menuItem
         JMenuItem helpItem=new JMenuItem("Help");
@@ -99,7 +98,7 @@ public class View extends JFrame{
         setVisible(true);
 
     }
-    private class AboutMenuItemHanlder implements ActionListener{
+    private class AboutMenuItemHandler implements ActionListener{
         @Override
         public void actionPerformed(ActionEvent e) {
             new JDialog(){
@@ -109,7 +108,7 @@ public class View extends JFrame{
                     setSize(new Dimension(350,450));
                     setLayout(new BorderLayout());
                     setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                    setLocationRelativeTo(frame);
+                    setLocationRelativeTo(this);
                     setVisible(true);
 
                     //adding components
@@ -148,7 +147,7 @@ public class View extends JFrame{
                     setSize(new Dimension(350,450));
                     setLayout(new BorderLayout());
                     setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                    setLocationRelativeTo(frame);
+                    setLocationRelativeTo(this);
                     setVisible(true);
 
                     //creating fields
@@ -194,13 +193,13 @@ public class View extends JFrame{
                 public void itemStateChanged(ItemEvent e) {
                     followRedirect=redirectCheckBox.isSelected();
                 }
-
             });
             JPanel redirectPanel=createPanel(redirectLabel,redirectCheckBox,"Follow Redirect");
 
             //creating hideOptionPanel
             hideInTrayLabel=new JLabel("Hide in Tray");
             hideCheckBox=new JCheckBox();
+            hideCheckBox.setSelected(hideInTray);
 
             //adding item listener
             hideCheckBox.addItemListener(new ItemListener() {
@@ -224,7 +223,7 @@ public class View extends JFrame{
 
             //setting dialog attributes
             setTitle("Options");
-            setLocationRelativeTo(frame);
+//            setLocationRelativeTo(this);
             pack();
             setVisible(true);
             setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -247,6 +246,7 @@ public class View extends JFrame{
             return panel;
         }
     }
+
     private void setUi(){
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -258,5 +258,8 @@ public class View extends JFrame{
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    public boolean getHideInTray(){
+        return hideInTray;
     }
 }

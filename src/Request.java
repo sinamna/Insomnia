@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class Request {
     private RequestPanel requestPanel;
-
+    private Response response;
     private String requestName;
     private String url;
     private String option;
@@ -19,9 +19,13 @@ public class Request {
 
     }
 
-//    public JSplitPane getReqAndResponseSplit() {
-//        return reqAndResponseSplit;
-//    }
+    public void setResponse(Response response) {
+        this.response = response;
+    }
+
+    public Response getResponse() {
+        return response;
+    }
 
     public RequestPanel getRequestPanel() {
         return requestPanel;

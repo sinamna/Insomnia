@@ -146,10 +146,12 @@ public class RequestListPanel extends JPanel {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 Request request = (Request) list.getSelectedValue();
-                reqAndResponseSplit.removeAll();
+//                reqAndResponseSplit.removeAll();
                 reqAndResponseSplit.setLeftComponent(request.getRequestPanel());
                 if(!request.getRequestPanel().isRequestSent())
-                    reqAndResponseSplit.setRightComponent(View.createVoidPanel());
+                    reqAndResponseSplit.setRightComponent(mainFrame.createVoidPanel());
+                else
+                    reqAndResponseSplit.setRightComponent(request.getResponse().getResponsePanel());
                 request.getRequestPanel().setSplitPane(reqAndResponseSplit);
                 reqAndResponseSplit.setResizeWeight(0.5);
                 reqAndResponseSplit.repaint();

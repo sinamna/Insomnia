@@ -12,15 +12,15 @@ public class RequestPanel extends JPanel {
     private boolean requestSent;
 
     public RequestPanel(Request request) {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BorderLayout());
         this.request = request;
         requestSent = false;
         setPreferredSize(new Dimension(370, 550));
         setMinimumSize(new Dimension(100, 400));
         UpperPanel upperPanel = new UpperPanel();
-        add(upperPanel, BorderLayout.PAGE_START);
+        add(upperPanel,BorderLayout.NORTH);
         CenterPanel centerPanel = new CenterPanel();
-        add(centerPanel, BorderLayout.CENTER);
+        add(centerPanel,BorderLayout.CENTER);
     }
 
     private class UpperPanel extends JPanel {
@@ -38,8 +38,9 @@ public class RequestPanel extends JPanel {
             //creating comboBox
             options = new String[]{"GET", "DELETE", "POST", "PUT", "PATCH"};
             methodList = new JComboBox(options);
-            methodList.setPreferredSize(new Dimension(70, 30));
-            methodList.setMinimumSize(new Dimension(70, 40));
+//            methodList.setPreferredSize(new Dimension(70, 30));
+//            methodList.setMinimumSize(new Dimension(70, 40));
+            methodList.setPreferredSize(new Dimension(methodList.getPreferredSize().width,methodList.getPreferredSize().height+15));
             methodList.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -77,6 +78,7 @@ public class RequestPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Response newResponse = new Response(request.getHeaders());
+                request.setResponse(newResponse);
                 splitPane.setRightComponent(newResponse.getResponsePanel());
                 splitPane.updateUI();
                 requestSent = true;
@@ -94,7 +96,7 @@ public class RequestPanel extends JPanel {
     }
 
     //------------------------------------------------------------------------------------------------
-    class CenterPanel extends JPanel {
+    private class CenterPanel extends JPanel {
         JMenuBar menuBar;
         JMenu bodyMenu;
         JMenu headerMenu;
@@ -113,7 +115,7 @@ public class RequestPanel extends JPanel {
 
             //menubar is added to the north side of panel
             menuBar = new JMenuBar();
-            menuBar.setMaximumSize(new Dimension(370, 40));
+            menuBar.setPreferredSize(new Dimension(menuBar.getPreferredSize().width,menuBar.getPreferredSize().height+30));
             add(menuBar, BorderLayout.NORTH);
 
             // creating main panel with card Layout
@@ -249,12 +251,18 @@ public class RequestPanel extends JPanel {
                 int chosenOption = JOptionPane.showConfirmDialog(null, "Are you sure ?",
                         "WARNING", JOptionPane.YES_NO_OPTION);
                 if (chosenOption == JOptionPane.YES_OPTION) {
-                    list.remove(infoBox.getInfo());
-                    parentPanel.remove(infoBox);
-                    InfoBox lastBox = (InfoBox) parentPanel.getComponent(parentPanel.getComponentCount() - 1);
-                    lastBox.setIsLast(true);
-                    parentPanel.repaint();
-                    parentPanel.revalidate();
+                    //the least number of components includes one Box rigid area and one info Box =2
+                    if(!(parentPanel.getComponentCount()==2)){
+                        list.remove(infoBox.getInfo());
+                        parentPanel.remove(infoBox);
+                        InfoBox lastBox = (InfoBox) parentPanel.getComponent(parentPanel.getComponentCount() - 1);
+                        lastBox.setIsLast(true);
+                        parentPanel.repaint();
+                        parentPanel.revalidate();
+                    }else{
+                        JOptionPane.showMessageDialog(null,"The only header can't be deleted.");
+                    }
+
                 }
                 //there should be sth handle the situation which there is no header ->        serious BUG shit
             }
@@ -278,6 +286,7 @@ public class RequestPanel extends JPanel {
             public FormData(){
                 //setting panel attribute
                 setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+
                 formDataList=new HashMap<>();
 
                 //adding first formData

@@ -13,7 +13,7 @@ public class ResponsePanel extends JPanel {
 
     public ResponsePanel(Response response) {
         //setting panel attributes
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BorderLayout());
         setPreferredSize(new Dimension(370, 550));
         setMinimumSize(new Dimension(100, 400));
 
@@ -46,7 +46,7 @@ public class ResponsePanel extends JPanel {
                 setEditable(false);
                 setBackground(Color.white);
                 setBorder(BorderFactory.createLineBorder(Color.black));
-                setPreferredSize(new Dimension(50, 30));
+                setPreferredSize(new Dimension(getPreferredSize().width+35, getPreferredSize().height+15));
                 setMinimumSize(this.getPreferredSize());
                 setMaximumSize(this.getPreferredSize());
                 setHorizontalAlignment(JTextField.CENTER);
@@ -57,10 +57,10 @@ public class ResponsePanel extends JPanel {
             super(new FlowLayout(FlowLayout.LEFT));
             setBackground(Color.WHITE);
             //Initializing fields
-            statusCode = new ResponseDetail("Hi");
-            statusMessage = new ResponseDetail("Hi");
-            elapsedTime = new ResponseDetail("Hi");
-            responseSize = new ResponseDetail("Ho");
+            statusCode = new ResponseDetail("200");
+            statusMessage = new ResponseDetail("Ok");
+            elapsedTime = new ResponseDetail("6.2 s");
+            responseSize = new ResponseDetail("73.3 kb");
 
             //adding to panel
             add(statusCode);
@@ -93,6 +93,7 @@ public class ResponsePanel extends JPanel {
 
             //creating MenuBar
             menuBar = new JMenuBar();
+            menuBar.setPreferredSize(new Dimension(menuBar.getPreferredSize().width,menuBar.getPreferredSize().height+30));
             add(menuBar, BorderLayout.PAGE_START);
 
             //creating menu Items
@@ -118,7 +119,7 @@ public class ResponsePanel extends JPanel {
             //adding panels to mainPanel
             mainPanel.add(rawBody,"Raw");
             mainPanel.add(previewBody,"Preview");
-            mainPanel.add(headerPanel,"Header");
+            mainPanel.add(new JScrollPane(headerPanel),"Header");
 
         }
     }
@@ -143,16 +144,16 @@ public class ResponsePanel extends JPanel {
         private JEditorPane display;
         public PreviewPanel(){
             super(new BorderLayout());
-
             //initializing display
             display=new JEditorPane();
             display.setEditable(false);
             display.setText("preview panel :)");
+            display.setVisible(true);
+            add(display);
         }
     }
     //---------------------------------------------------------------------------------------
     private class HeaderPanel extends JPanel{
-        private ArrayList<HeaderBox> headerPanels;
         private JLabel nameLabel;
         private JLabel valueLabel;
         private JButton copyBtn;
@@ -181,11 +182,11 @@ public class ResponsePanel extends JPanel {
             copyBtn.addActionListener(new CopyBtnHandler());
 
             //adding components to the panel
-            add(Box.createRigidArea(new Dimension(1000,20)));
+            add(Box.createRigidArea(new Dimension(100,20)));
             add(labelHolder);
-            add(Box.createRigidArea(new Dimension(1000,5)));
+            add(Box.createRigidArea(new Dimension(100,5)));
             createHeaderPanels();
-            add(Box.createRigidArea(new Dimension(1000,40)));
+            add(Box.createRigidArea(new Dimension(100,40)));
             add(copyBtn);
 
         }
