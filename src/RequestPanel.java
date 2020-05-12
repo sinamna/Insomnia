@@ -1,4 +1,4 @@
-import Insomnia.TextLineNumber;
+
 import com.sun.xml.internal.ws.api.message.Header;
 
 import javax.swing.*;
@@ -12,12 +12,13 @@ public class RequestPanel extends JPanel {
     private Request request;
     private JSplitPane splitPane;
     private boolean requestSent;
-
-    public RequestPanel(Request request) {
+    private JList<Request> requestJList;
+    public RequestPanel(Request request,JList<Request> model) {
         //setting panel's attributes
         setLayout(new BorderLayout());
         this.request = request;
         requestSent = false;
+        this.requestJList=model;
         setPreferredSize(new Dimension(370, 550));
         setMinimumSize(new Dimension(100, 400));
 
@@ -36,6 +37,7 @@ public class RequestPanel extends JPanel {
         private JComboBox methodList;
         JTextField urlText;
         JButton sendBtn;
+        private JButton delBtn;
 
         public UpperPanel() {
             //setting panel's attributes
@@ -51,7 +53,7 @@ public class RequestPanel extends JPanel {
                 public void actionPerformed(ActionEvent e) {
                     String option = (String) methodList.getSelectedItem();
                     request.setOption(option);
-                    updateUI();
+                    requestJList.updateUI();
                 }
             });
             String option=request.getOption();
@@ -72,13 +74,25 @@ public class RequestPanel extends JPanel {
             //creating button for sending request
             sendBtn = new JButton("Send");
             sendBtn.addActionListener(new SendBtnHandler());
-            sendBtn.setMinimumSize(new Dimension(30, 40));
-            sendBtn.setPreferredSize(new Dimension(sendBtn.getPreferredSize().width,
-                    methodList.getPreferredSize().height));
+            sendBtn.setMinimumSize(new Dimension(30, 30));
+//            sendBtn.setPreferredSize(new Dimension(sendBtn.getPreferredSize().width,
+//                    methodList.getPreferredSize().height));
+            //creating button for deleting request
+            delBtn=new JButton("Delete");
+            delBtn.setMinimumSize(sendBtn.getMinimumSize());
+            delBtn.addActionListener(new DelBtnHandler());
+
             //adding components to the panel
             add(methodList);
             add(urlText);
-            add(sendBtn);
+
+            add(new JPanel(){
+                {
+                    setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+                    add(sendBtn);
+                    add(delBtn);
+                }
+            });
         }
 
         private class SendBtnHandler implements ActionListener {
@@ -91,7 +105,17 @@ public class RequestPanel extends JPanel {
                 requestSent = true;
             }
         }
-
+        private class DelBtnHandler implements ActionListener{
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DefaultListModel<Request> model= (DefaultListModel<Request>) requestJList.getModel();
+                model.removeElement(request);
+                splitPane.setRightComponent(MainFrame.createVoidPanel());
+                splitPane.setLeftComponent(MainFrame.createVoidPanel());
+                splitPane.updateUI();
+                requestJList.updateUI();
+            }
+        }
         private int findSelectedIndex(String option){
             int found = 0;
             for(int i=0;i<options.length;i++){

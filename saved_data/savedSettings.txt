@@ -1,3 +1,3 @@
 FollowRedirect false
 HideInTray false
-Resolution 854 439
+Resolution 1000 470

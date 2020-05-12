@@ -121,6 +121,7 @@ public class MainFrame extends JFrame{
         reqAndResponseSplit =new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,createVoidPanel(),createVoidPanel());
         reqAndResponseSplit.setResizeWeight(0.5);
         listPanel=new RequestListPanel(reqAndResponseSplit);
+//        listPanel.setVisible(false);
         mainBody=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,listPanel, reqAndResponseSplit);
 
         //adding components to the frame
@@ -262,7 +263,8 @@ public class MainFrame extends JFrame{
         public void componentResized(ComponentEvent e) {
             super.componentResized(e);
             MainFrame frame=(MainFrame)e.getSource();
-            setLastSize(frame.getBounds().getSize());
+            if(!isFullScreen)
+                 setLastSize(frame.getBounds().getSize());
         }
     }
 

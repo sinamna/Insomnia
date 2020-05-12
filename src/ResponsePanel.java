@@ -46,7 +46,7 @@ public class ResponsePanel extends JPanel {
                 setEditable(false);
                 setBackground(Color.white);
                 setBorder(BorderFactory.createLineBorder(Color.black));
-                setPreferredSize(new Dimension(getPreferredSize().width+35, getPreferredSize().height+15));
+                setPreferredSize(new Dimension(getPreferredSize().width+35, getPreferredSize().height+25));
                 setMinimumSize(this.getPreferredSize());
                 setMaximumSize(this.getPreferredSize());
                 setHorizontalAlignment(JTextField.CENTER);

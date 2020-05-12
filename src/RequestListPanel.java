@@ -142,7 +142,7 @@ public class RequestListPanel extends JPanel {
                 public void actionPerformed(ActionEvent e) {
                     String requestName = requestNameField.getText();
                     String selectedMethod=(String)methodOptions.getSelectedItem();
-                    Request newRequest = new Request(requestName,selectedMethod);
+                    Request newRequest = new Request(requestName,selectedMethod,list);
                     requestsModel.addElement(newRequest);
                     ListPanel.this.updateUI();
                     addDialog.dispose();
@@ -152,22 +152,26 @@ public class RequestListPanel extends JPanel {
         private class ChosenRequestHandler implements ListSelectionListener {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                Request request = (Request) list.getSelectedValue();
+                if(list.getSelectedIndex()>-1){
+                    Request request = (Request) list.getSelectedValue();
 //                reqAndResponseSplit.removeAll();
-                reqAndResponseSplit.setLeftComponent(request.getRequestPanel());
-                if(!request.getRequestPanel().isRequestSent())
-                    reqAndResponseSplit.setRightComponent(MainFrame.createVoidPanel());
-                else
-                    reqAndResponseSplit.setRightComponent(request.getResponse().getResponsePanel());
-                request.getRequestPanel().setSplitPane(reqAndResponseSplit);
-                reqAndResponseSplit.setResizeWeight(0.5);
-                reqAndResponseSplit.repaint();
-                reqAndResponseSplit.revalidate();
-                reqAndResponseSplit.updateUI();
+                    reqAndResponseSplit.setLeftComponent(request.getRequestPanel());
+                    if(!request.getRequestPanel().isRequestSent())
+                        reqAndResponseSplit.setRightComponent(MainFrame.createVoidPanel());
+                    else
+                        reqAndResponseSplit.setRightComponent(request.getResponse().getResponsePanel());
+                    request.getRequestPanel().setSplitPane(reqAndResponseSplit);
+                    reqAndResponseSplit.setResizeWeight(0.5);
+                    reqAndResponseSplit.repaint();
+                    reqAndResponseSplit.revalidate();
+                    reqAndResponseSplit.updateUI();
+                }
             }
         }
+        private  void removeRequest(Request requestToRemove){
 
-        public class ListItemRenderer implements ListCellRenderer<Request> {
+        }
+        private class ListItemRenderer implements ListCellRenderer<Request> {
 
             @Override
             public Component getListCellRendererComponent(JList<? extends Request> list
@@ -183,15 +187,6 @@ public class RequestListPanel extends JPanel {
                 setColorForOption(requestOption,request.getOption());
                 JLabel requestName=new JLabel(request.getRequestName());
                 requestName.setForeground(Color.WHITE);
-
-//                //creating delete button
-//                JButton delBtn=new JButton("DEL");
-//                delBtn.addActionListener(new ActionListener() {
-//                    @Override
-//                    public void actionPerformed(ActionEvent e) {
-//                        requestsModel.removeElement(request);
-//                    }
-//                });
 
                 //adding to shownPanel
                 shownPanel.add(Box.createRigidArea(new Dimension(10,30)));

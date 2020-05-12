@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.util.ArrayList;
 
 public class Request {
@@ -9,12 +10,12 @@ public class Request {
     //Info type are key-valued types
     private ArrayList<Info> headers;
     private ArrayList<Info> formData;
-    public Request(String requestName, String option) {
+    public Request(String requestName, String option, JList<Request>listModel) {
         this.requestName = requestName;
         this.option = option;
         headers = new ArrayList<>();
         formData=new ArrayList<>();
-        requestPanel = new RequestPanel(this);
+        requestPanel = new RequestPanel(this,listModel);
 
 
     }
