@@ -7,9 +7,16 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
+/**
+ * a panel with logo and a list of requests
+ */
 public class RequestListPanel extends JPanel {
     JSplitPane reqAndResponseSplit;
 
+    /**
+     * constructs panel with given split pane which is used in Main Frame
+     * @param reqAndResponseSplit the split pane
+     */
     public RequestListPanel(JSplitPane reqAndResponseSplit) {
         //set panel's attributes
         super(new BorderLayout());
@@ -17,9 +24,10 @@ public class RequestListPanel extends JPanel {
         setMinimumSize(new Dimension(200, 400));
         this.reqAndResponseSplit = reqAndResponseSplit;
 
+        //create panel for logo
         JPanel namePanel = new JPanel(new BorderLayout());
 
-        //label
+        //create label and set its attributes
         JLabel programName = new JLabel("Insomnia");
         programName.setHorizontalAlignment(JLabel.CENTER);
         programName.setPreferredSize(new Dimension(programName.getPreferredSize().width
@@ -28,9 +36,13 @@ public class RequestListPanel extends JPanel {
         programName.setForeground(Color.WHITE);
         programName.setBackground(new Color(124, 84, 145));
         programName.setFont(new Font("Palatino",Font.BOLD,20));
+        //adding logo to name panel
         namePanel.add(programName, BorderLayout.CENTER);
-        add(namePanel, BorderLayout.PAGE_START);
+
+        //creating list Panel
         ListPanel listPanel = new ListPanel();
+        //adding components to the panel
+        add(namePanel, BorderLayout.PAGE_START);
         add(new JScrollPane(listPanel), BorderLayout.CENTER);
     }
 //----------------------------------------------------------------------------
@@ -41,10 +53,11 @@ public class RequestListPanel extends JPanel {
 
         public ListPanel() {
             super(new BorderLayout());
+            setPreferredSize(new Dimension(120,350));
             // add request Button
             addRequestBtn = new JButton("Add Request");
             addRequestBtn.addActionListener(new NewRequestHandler());
-
+//            addRequestBtn.setPreferredSize(new Dimension(100,30));
 
             // the list of requests
             requestsModel = new DefaultListModel<>();
@@ -55,9 +68,13 @@ public class RequestListPanel extends JPanel {
 
             //adding components to the panel
             add(addRequestBtn, BorderLayout.NORTH);
-            add(list, BorderLayout.CENTER);
+            add(new JScrollPane(list), BorderLayout.CENTER);
         }
-        private class NewRequestHandler extends KeyAdapter implements ActionListener {
+
+    /**
+     * creates a dialog when button is pressed and takes the information for new request
+     */
+    private class NewRequestHandler extends KeyAdapter implements ActionListener {
             private JComboBox<String> methodOptions;
             private String[] options;
             private JDialog addDialog;
@@ -137,7 +154,11 @@ public class RequestListPanel extends JPanel {
                     };
                 }
             }
-            private class CreateRequestHandler implements ActionListener{
+
+        /**
+         * create request when "create Button" is clicked and adds it to list model
+         */
+        private class CreateRequestHandler implements ActionListener{
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String requestName = requestNameField.getText();
@@ -149,13 +170,18 @@ public class RequestListPanel extends JPanel {
                 }
             }
         }
-        private class ChosenRequestHandler implements ListSelectionListener {
+
+    /**
+     * shows requests details (req panel and response panel) in split pane
+     */
+    private class ChosenRequestHandler implements ListSelectionListener {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if(list.getSelectedIndex()>-1){
                     Request request = (Request) list.getSelectedValue();
 //                reqAndResponseSplit.removeAll();
                     reqAndResponseSplit.setLeftComponent(request.getRequestPanel());
+                    //sets the right panel as empty panel if request isn't sent yet
                     if(!request.getRequestPanel().isRequestSent())
                         reqAndResponseSplit.setRightComponent(MainFrame.createVoidPanel());
                     else
@@ -171,8 +197,14 @@ public class RequestListPanel extends JPanel {
         private  void removeRequest(Request requestToRemove){
 
         }
-        private class ListItemRenderer implements ListCellRenderer<Request> {
 
+    /**
+     * a renderer for list items
+     */
+    private class ListItemRenderer implements ListCellRenderer<Request> {
+            /*
+            creates a panel and adds 2 labels to it and color the label for showing used-method
+             */
             @Override
             public Component getListCellRendererComponent(JList<? extends Request> list
                     , Request request, int index, boolean isSelected, boolean cellHasFocus) {
@@ -180,7 +212,7 @@ public class RequestListPanel extends JPanel {
                 JPanel shownPanel=new JPanel();
                 shownPanel.setLayout(new BoxLayout(shownPanel,BoxLayout.X_AXIS));
                 shownPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-                shownPanel.setPreferredSize(new Dimension(200,30));
+                shownPanel.setPreferredSize(new Dimension(100,30));
 
                 //creating labels
                 JLabel requestOption=new JLabel(request.getOption());
@@ -204,6 +236,12 @@ public class RequestListPanel extends JPanel {
 
                 return shownPanel;
             }
+
+        /**
+         * sets color of the label based on its option(method)
+         * @param label the label which its foreground color to be changed
+         * @param option the option used for picking color
+         */
             private void setColorForOption(JLabel label,String option){
                 switch (option){
                     case "GET":

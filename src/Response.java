@@ -8,6 +8,11 @@ public class Response {
     private String responseText;
     private ArrayList<Info> headers;
     private ResponsePanel responsePanel;
+
+    /**
+     * constructs a response with list of headers from request
+     * @param headers the list of headers
+     */
     public Response(ArrayList<Info> headers){
         //responsePanel use Strings field
         //it should be initialized after fields
@@ -21,6 +26,11 @@ public class Response {
 
 
     }
+
+    /**
+     *
+     * @return the response panel
+     */
     public ResponsePanel getResponsePanel() {
         return responsePanel;
     }
@@ -65,10 +75,18 @@ public class Response {
         return responseSize;
     }
 
+    /**
+     *
+     * @return the response text
+     */
     public String getResponseText() {
         return responseText;
     }
 
+    /**
+     *
+     * @return the header array
+     */
     public ArrayList<Info> getHeaders() {
         return headers;
     }

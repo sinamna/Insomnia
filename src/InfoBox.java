@@ -3,6 +3,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.HashMap;
 
+/**
+ * a panel with key-valued feature and textFields and arranged components
+ * with the ability to save its data to Info obj
+ */
 public class InfoBox extends JPanel {
     private JTextField key;
     private JTextField value;
@@ -11,6 +15,10 @@ public class InfoBox extends JPanel {
     private boolean isLast;
     private Info info;
 
+    /**
+     * constructs a panel with key&value textfields and data saver feature
+     * @param info the info used to store data
+     */
     public InfoBox(Info info) {
         super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         this.info = info;
@@ -37,20 +45,17 @@ public class InfoBox extends JPanel {
 
         //initializing the combo box to represent state of header
         checkBox = new JCheckBox();
+        //sets the boolean variable in info object based on check box's state
         checkBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if (checkBox.isSelected()) {
-                    info.setEnabled(true);
-                } else {
-                    info.setEnabled(false);
-                }
+                info.setEnabled(checkBox.isSelected());
             }
         });
 
         //initializing a button to delete a box
-        delBtn = new JButton("DEL");
-//        delBtn.addActionListener(new RemoveHandler());
+        delBtn = new JButton("DEL");//the actionListener related to deleting infoBoxed will be added later
+
 
         //adding components to panel
         add(Box.createRigidArea(new Dimension(5, 0)));
@@ -64,6 +69,9 @@ public class InfoBox extends JPanel {
         add(Box.createRigidArea(new Dimension(5, 0)));
     }
 
+    /**
+     * saves the textFields text into Info String fields whenever loses focus
+     */
     public class SaveInfoHandler extends FocusAdapter {
         @Override
         public void focusLost(FocusEvent e) {
@@ -75,33 +83,56 @@ public class InfoBox extends JPanel {
                     } else if (e.getSource() == value) {
                         info.setValue(textField.getText());
                     }
-//                    System.out.println(info);
                 }
             } catch (ClassCastException exception) {
             }
         }
     }
 
+    /**
+     * returns the state of the box in container
+     * @return
+     */
     public boolean isLast() {
         return isLast;
     }
 
+    /**
+     * sets the state of the box in container
+     * @param isLast the state to be set
+     */
     public void setIsLast(boolean isLast) {
         this.isLast = isLast;
     }
 
+    /**
+     *
+     * @return the key textField
+     */
     public JTextField getKey() {
         return key;
     }
 
+    /**
+     *
+     * @return the value TextField
+     */
     public JTextField getValue() {
         return value;
     }
 
+    /**
+     *
+     * @return the delete button
+     */
     public JButton getDelBtn() {
         return delBtn;
     }
 
+    /**
+     *
+     * @return the info which this box used to store data
+     */
     public Info getInfo() {
         return info;
     }
