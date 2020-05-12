@@ -1,24 +1,33 @@
 import javax.swing.*;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
 
 public class RequestListPanel extends JPanel {
     JSplitPane reqAndResponseSplit;
 
     public RequestListPanel(JSplitPane reqAndResponseSplit) {
+        //set panel's attributes
         super(new BorderLayout());
         setPreferredSize(new Dimension(300, 470));
         setMinimumSize(new Dimension(200, 400));
         this.reqAndResponseSplit = reqAndResponseSplit;
+
         JPanel namePanel = new JPanel(new BorderLayout());
-        JTextArea programName = new JTextArea("HTTP Client");
-        programName.setEditable(false);
+
+        //label
+        JLabel programName = new JLabel("Insomnia");
+        programName.setHorizontalAlignment(JLabel.CENTER);
+        programName.setPreferredSize(new Dimension(programName.getPreferredSize().width
+                ,programName.getPreferredSize().height+30));
+        programName.setOpaque(true);
+        programName.setForeground(Color.WHITE);
+        programName.setBackground(new Color(124, 84, 145));
+        programName.setFont(new Font("Palatino",Font.BOLD,20));
         namePanel.add(programName, BorderLayout.CENTER);
         add(namePanel, BorderLayout.PAGE_START);
         ListPanel listPanel = new ListPanel();
@@ -29,7 +38,6 @@ public class RequestListPanel extends JPanel {
         JButton addRequestBtn;
         DefaultListModel<Request> requestsModel;
         JList<Request> list;
-        ArrayList<Request> requests;
 
         public ListPanel() {
             super(new BorderLayout());
@@ -49,7 +57,6 @@ public class RequestListPanel extends JPanel {
             add(addRequestBtn, BorderLayout.NORTH);
             add(list, BorderLayout.CENTER);
         }
-
         private class NewRequestHandler extends KeyAdapter implements ActionListener {
             private JComboBox<String> methodOptions;
             private String[] options;
@@ -111,7 +118,7 @@ public class RequestListPanel extends JPanel {
                 addDialog.add(new JPanel(){
                     {
                        setLayout(new FlowLayout(FlowLayout.RIGHT));
-                       setPreferredSize(new Dimension(700,200));
+                       setPreferredSize(new Dimension(650,200));
                        setMinimumSize(this.getPreferredSize());
                        setMaximumSize(this.getPreferredSize());
                        add(createBtn);
@@ -137,11 +144,11 @@ public class RequestListPanel extends JPanel {
                     String selectedMethod=(String)methodOptions.getSelectedItem();
                     Request newRequest = new Request(requestName,selectedMethod);
                     requestsModel.addElement(newRequest);
+                    ListPanel.this.updateUI();
                     addDialog.dispose();
                 }
             }
         }
-
         private class ChosenRequestHandler implements ListSelectionListener {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -149,7 +156,7 @@ public class RequestListPanel extends JPanel {
 //                reqAndResponseSplit.removeAll();
                 reqAndResponseSplit.setLeftComponent(request.getRequestPanel());
                 if(!request.getRequestPanel().isRequestSent())
-                    reqAndResponseSplit.setRightComponent(mainFrame.createVoidPanel());
+                    reqAndResponseSplit.setRightComponent(MainFrame.createVoidPanel());
                 else
                     reqAndResponseSplit.setRightComponent(request.getResponse().getResponsePanel());
                 request.getRequestPanel().setSplitPane(reqAndResponseSplit);
@@ -161,27 +168,65 @@ public class RequestListPanel extends JPanel {
         }
 
         public class ListItemRenderer implements ListCellRenderer<Request> {
-            public ListItemRenderer(){
-                //super(new FlowLayout());
-               setOpaque(true);
-            }
+
             @Override
             public Component getListCellRendererComponent(JList<? extends Request> list
                     , Request request, int index, boolean isSelected, boolean cellHasFocus) {
-                JPanel shownPanel=new JPanel(new FlowLayout());
+                //creating panel
+                JPanel shownPanel=new JPanel();
+                shownPanel.setLayout(new BoxLayout(shownPanel,BoxLayout.X_AXIS));
+                shownPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+                shownPanel.setPreferredSize(new Dimension(200,30));
+
+                //creating labels
                 JLabel requestOption=new JLabel(request.getOption());
+                setColorForOption(requestOption,request.getOption());
                 JLabel requestName=new JLabel(request.getRequestName());
+                requestName.setForeground(Color.WHITE);
+
+//                //creating delete button
+//                JButton delBtn=new JButton("DEL");
+//                delBtn.addActionListener(new ActionListener() {
+//                    @Override
+//                    public void actionPerformed(ActionEvent e) {
+//                        requestsModel.removeElement(request);
+//                    }
+//                });
+
+                //adding to shownPanel
+                shownPanel.add(Box.createRigidArea(new Dimension(10,30)));
                 shownPanel.add(requestOption);
+                shownPanel.add(Box.createRigidArea(new Dimension(10,30)));
                 shownPanel.add(requestName);
-                setVisible(true);
-                if(isSelected){
-                    shownPanel.setBackground(list.getSelectionBackground());
-                    shownPanel.setForeground(list.getSelectionForeground());
-                }else{
-                    shownPanel.setBackground(list.getBackground());
-                    shownPanel.setForeground(list.getForeground());
-                }
+                shownPanel.add(Box.createRigidArea(new Dimension(40,30)));
+
+
+
+                shownPanel.setVisible(true);
+                shownPanel.repaint();
+                shownPanel.updateUI();
+                shownPanel.revalidate();
+
                 return shownPanel;
+            }
+            private void setColorForOption(JLabel label,String option){
+                switch (option){
+                    case "GET":
+                        label.setForeground(Color.magenta);
+                        break;
+                    case "DELETE":
+                        label.setForeground(Color.RED);
+                        break;
+                    case "POST":
+                        label.setForeground(Color.GREEN);
+                        break;
+                    case "PUT":
+                        label.setForeground(Color.ORANGE);
+                        break;
+                    case "PATCH":
+                        label.setForeground(Color.YELLOW);
+                        break;
+                }
             }
         }
     }

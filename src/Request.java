@@ -59,6 +59,10 @@ public class Request {
         return headers;
     }
 
+    public ArrayList<Info> getFormData() {
+        return formData;
+    }
+
     public String getUrl() {
         return url;
     }

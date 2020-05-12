@@ -1,13 +1,20 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
+import java.util.Scanner;
 
-public class mainFrame extends JFrame{
+import com.github.weisj.darklaf.DarkLaf;
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.theme.DarculaTheme;
+
+public class MainFrame extends JFrame{
     private RequestListPanel listPanel;
     private JMenuBar menuBar;
     private JMenu applicationMenu;
     private JMenu viewMenu;
     private JMenu helpMenu;
+    //boolean variables to save details
     private boolean hideInTray;
     private boolean followRedirect;
     private boolean isFullScreen;
@@ -15,19 +22,41 @@ public class mainFrame extends JFrame{
     private GraphicsEnvironment env;
     private GraphicsDevice device;
     private JSplitPane mainBody, reqAndResponseSplit;
-    public mainFrame(){
+
+    /**
+     * constructs a frame with menu bar and 2 splitPanes
+     */
+    public MainFrame(){
         //setting frame's attributes
         super("Insomnia");
         setUi();
         ImageIcon frameIcon=new ImageIcon("media\\insomnia_Icon.png");
         setIconImage(frameIcon.getImage());
-        addWindowListener(new MonitorCloseOperation(this));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(new Dimension(1000,470));
+        addComponentListener(new ResizeListener());
         env = GraphicsEnvironment.getLocalGraphicsEnvironment();
         device = env.getDefaultScreenDevice();
         followRedirect=false;
         hideInTray=false;
         isFullScreen=false;
         lastSize=getBounds().getSize();
+
+        //save or load files
+        /*
+        if file is available it loads the setting ,if not it creates new file
+         */
+        File savedSettings=new File("saved_data\\savedSettings.txt");
+        try{
+            //create file method returns false if file already exists
+            if(!savedSettings.createNewFile())
+                loadSettings(savedSettings);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //adding listener to save data to frame
+        addWindowListener(new OptionSaver(savedSettings));
+
 
         //creating application menu
         applicationMenu=new JMenu("Application");
@@ -38,12 +67,16 @@ public class mainFrame extends JFrame{
         optionsItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                OptionDialog dialog=new OptionDialog();
+                new OptionDialog();
             }
         });
+
+        //exit menuItem
         JMenuItem exitItem=new JMenuItem("Exit");
         exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X,ActionEvent.CTRL_MASK));
         exitItem.setMnemonic('X');//set mnemonic to X
+        //close operation will be handled based on hideInTray value
+        exitItem.addActionListener(new MonitorCloseOperation(this));
         applicationMenu.add(optionsItem);
         applicationMenu.add(exitItem);
 
@@ -93,36 +126,35 @@ public class mainFrame extends JFrame{
         //adding components to the frame
         setJMenuBar(menuBar);
         add(mainBody);
-        setSize(new Dimension(1000,470));
-        setVisible(true);
 
+        setVisible(true);
     }
+
+    /**
+     * toggles fullscreen and save the last size of the frame
+     * if the frame is already in fullscreen mode it will load the last size
+     */
     private class ToggleFullScreen implements ActionListener{
         @Override
         public void actionPerformed(ActionEvent e) {
             if(isFullScreen){
                 device.setFullScreenWindow(null);
-//                mainFrame.this.dispose();
-//                JFrame newFrame=new JFrame("Insomnia");
                 setVisible(true);
-                mainFrame.this.setSize(lastSize);
+                MainFrame.this.setSize(lastSize);
                 isFullScreen=false;
             }else{
                 //saving the info
                 isFullScreen=true;
                 lastSize=getBounds().getSize();
                 setExtendedState(JFrame.MAXIMIZED_BOTH);
-//            setUndecorated(true);
-//                setResizable(false);
                 validate();
-//                device.setFullScreenWindow(mainFrame.this);
-
-
-
             }
-
         }
     }
+
+    /**
+     * creates a dialog with explanation in it
+     */
     private class AboutMenuItemHandler implements ActionListener{
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -161,6 +193,10 @@ public class mainFrame extends JFrame{
             };
         }
     }
+
+    /**
+     * creates new dialog for help menu item
+     */
     private class HelpMenuItemHandler implements ActionListener{
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -186,9 +222,78 @@ public class mainFrame extends JFrame{
             };
         }
     }
-    private void loadSettings(){
 
+    /**
+     * loads the options and last resolution from file
+     * @param file file used to load settings from
+     */
+    private void loadSettings(File file){
+        try(Scanner savedSettings=new Scanner(file))
+        {
+            while(savedSettings.hasNext()){
+                String option=(String)savedSettings.nextLine();
+                String[] divided=option.split(" ");
+                if(option.contains("Follow")) {
+                    followRedirect=divided[1].equals("true");
+                }else if(option.contains("Hide"))
+                    hideInTray=divided[1].equals("true");
+                else if(option.contains("Resolution"))
+                    MainFrame.this.setSize(new Dimension(Integer.parseInt(divided[1])
+                            ,Integer.parseInt(divided[2])));
+            }
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+        }
     }
+
+    /**
+     * sets the last size of frame
+     * @param lastSize size to be set
+     */
+    public void setLastSize(Dimension lastSize) {
+        this.lastSize = lastSize;
+    }
+
+    /**
+     * saves the last size whenever frame being resized
+     */
+    private class ResizeListener extends ComponentAdapter{
+        @Override
+        public void componentResized(ComponentEvent e) {
+            super.componentResized(e);
+            MainFrame frame=(MainFrame)e.getSource();
+            setLastSize(frame.getBounds().getSize());
+        }
+    }
+
+    /**
+     * saves the options and last frame size in string format
+     */
+    private class OptionSaver extends WindowAdapter{
+        private File file;
+        public OptionSaver(File file){
+            this.file=file;
+        }
+
+        @Override
+        public void windowClosing(WindowEvent e) {
+            String[] options={"FollowRedirect "+followRedirect,"HideInTray "+hideInTray};
+            System.out.println();
+            try(PrintWriter out=new PrintWriter(file))
+            {
+                for(String option:options)
+                    out.println(option);
+                out.println("Resolution "+lastSize.getSize().width+" "+lastSize.getSize().height);
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * creates empty void panels
+     * @return panel created
+     */
     public static JPanel createVoidPanel(){
         JPanel voidPanel=new JPanel();
         voidPanel.setPreferredSize(new Dimension(370,470));
@@ -196,6 +301,9 @@ public class mainFrame extends JFrame{
         return voidPanel;
     }
 
+    /**
+     * the dialog which settings being set
+     */
     private class OptionDialog extends JDialog{
         private JPanel holder;
         private JLabel redirectLabel;
@@ -211,6 +319,7 @@ public class mainFrame extends JFrame{
             //creating redirect Panel
             redirectLabel=new JLabel("Follow Redirect");
             redirectCheckBox=new JCheckBox();
+            redirectCheckBox.setSelected(followRedirect);
 
             //adding item listener
             redirectCheckBox.addItemListener(new ItemListener() {
@@ -219,7 +328,7 @@ public class mainFrame extends JFrame{
                     followRedirect=redirectCheckBox.isSelected();
                 }
             });
-            JPanel redirectPanel=createPanel(redirectLabel,redirectCheckBox,"Follow Redirect");
+            JPanel redirectPanel=createPanel(redirectLabel,redirectCheckBox);
 
             //creating hideOptionPanel
             hideInTrayLabel=new JLabel("Hide in Tray");
@@ -233,7 +342,7 @@ public class mainFrame extends JFrame{
                     hideInTray=hideCheckBox.isSelected();
                 }
             });
-            JPanel hideOptionPanel=createPanel(hideInTrayLabel,hideCheckBox,"Hide in Tray");
+            JPanel hideOptionPanel=createPanel(hideInTrayLabel,hideCheckBox);
 
             //adding component to holder
             holder.add(Box.createRigidArea(new Dimension(100,25)));
@@ -248,14 +357,19 @@ public class mainFrame extends JFrame{
 
             //setting dialog attributes
             setTitle("Options");
-//            setLocationRelativeTo(this);
             pack();
             setVisible(true);
             setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
         }
 
-        private JPanel createPanel(JLabel label, JCheckBox checkBox, String labelText){
+        /**
+         * creates panel with customized order
+         * @param label the label in panel
+         * @param checkBox the checkbox in panel
+         * @return the created panel
+         */
+        private JPanel createPanel(JLabel label, JCheckBox checkBox){
             //creating Label
             label.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -272,18 +386,29 @@ public class mainFrame extends JFrame{
         }
     }
 
+    /**
+     * sets the ui
+     */
     private void setUi(){
-        try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (Exception e) {
+        try{
+            LafManager.setTheme(new DarculaTheme());
+            UIManager.setLookAndFeel(DarkLaf.class.getCanonicalName());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+
     }
+
+    /**
+     * return the hide in tray value
+     * @return the boolean value
+     */
     public boolean getHideInTray(){
         return hideInTray;
     }

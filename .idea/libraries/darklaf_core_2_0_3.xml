@@ -1,0 +1,19 @@
+<component name="libraryTable">
+  <library name="darklaf-core-2.0.3">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/darklaf-core-2.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/darklaf-macos-2.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/darklaf-native-utils-2.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/darklaf-platform-base-2.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/darklaf-property-loader-2.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/darklaf-theme-2.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/darklaf-utils-2.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/darklaf-windows-2.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/jna-5.5.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/jxlayer-3.0.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/darklaf_sources/svgSalamander-1.1.2.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

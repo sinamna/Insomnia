@@ -55,7 +55,7 @@ public class ResponsePanel extends JPanel {
 
         public UpperPanel() {
             super(new FlowLayout(FlowLayout.LEFT));
-            setBackground(Color.WHITE);
+//            setBackground(Color.WHITE);
             //Initializing fields
             statusCode = new ResponseDetail("200");
             statusMessage = new ResponseDetail("Ok");

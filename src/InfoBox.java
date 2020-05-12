@@ -21,14 +21,19 @@ public class InfoBox extends JPanel {
         setMaximumSize(new Dimension(1000, 35));
 
         //initializing the textField for key
-        key = new JTextField();
+        key = new JTextField("Key");
+        key.setForeground(Color.gray);
         key.setPreferredSize(new Dimension(110, 30));
         key.addFocusListener(new SaveInfoHandler());
+        key.addFocusListener(new AddWaterMark("Key"));
 
         //initializing the textField for value
-        value = new JTextField();
+        value = new JTextField("Value");
+        value.setForeground(Color.gray);
         value.setPreferredSize(new Dimension(110, 30));
         value.addFocusListener(new SaveInfoHandler());
+        value.addFocusListener(new AddWaterMark("Value"));
+
 
         //initializing the combo box to represent state of header
         checkBox = new JCheckBox();

@@ -2,24 +2,24 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class MonitorCloseOperation extends WindowAdapter {
+public class MonitorCloseOperation implements ActionListener {
     private TrayIcon trayIcon;
     private SystemTray systemTray;
     private PopupMenu popupMenu;
-    private mainFrame frame;
+    private MainFrame frame;
     public  MonitorCloseOperation(JFrame frame){
         //frame
-        this.frame=(mainFrame)frame;
+        this.frame=(MainFrame)frame;
 
         //system Tray
         systemTray=SystemTray.getSystemTray();
 
         //popup menu
-        popupMenu=createPopupMenu();
+//        popupMenu=createPopupMenu();
 
         //trayIcon
         Image image=Toolkit.getDefaultToolkit().getImage("media\\insomnia_Icon.png");
-        trayIcon=new TrayIcon(image,"Insomnia",popupMenu);
+        trayIcon=new TrayIcon(image,"Insomnia");
         trayIcon.addMouseListener(new ClickOnTrayHandler());
         trayIcon.setImageAutoSize(true);
     }
@@ -43,39 +43,38 @@ public class MonitorCloseOperation extends WindowAdapter {
             }
         }
     }
-    private PopupMenu createPopupMenu(){
-        PopupMenu popupMenu=new PopupMenu();
-
-        //creating exitItem
-        MenuItem exitItem=new MenuItem("Exit");
-        exitItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                System.exit(0);
-            }
-        });
-
-        //creating openItem
-        MenuItem openItem=new MenuItem("Open");
-        openItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.setVisible(true);
-                frame.setExtendedState(JFrame.NORMAL);
-                systemTray.remove(trayIcon);
-            }
-        });
-        //add items to menu
-        popupMenu.add(exitItem);
-        popupMenu.add(openItem);
-
-        return popupMenu;
-    }
+//    private PopupMenu createPopupMenu(){
+//        PopupMenu popupMenu=new PopupMenu();
+//
+//        //creating exitItem
+//        MenuItem exitItem=new MenuItem("Exit");
+//        exitItem.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                frame.dispose();
+//                System.exit(0);
+//            }
+//        });
+//
+//        //creating openItem
+//        MenuItem openItem=new MenuItem("Open");
+//        openItem.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                frame.setVisible(true);
+//                frame.setExtendedState(JFrame.NORMAL);
+//                systemTray.remove(trayIcon);
+//            }
+//        });
+//        //add items to menu
+//        popupMenu.add(exitItem);
+//        popupMenu.add(openItem);
+//
+//        return popupMenu;
+//    }
 
     @Override
-    public void windowClosing(WindowEvent e) {
-//        super.windowClosed(e);
+    public void actionPerformed(ActionEvent e) {
         if(frame.getHideInTray()) {
             try {
                 frame.setVisible(false);
@@ -87,6 +86,5 @@ public class MonitorCloseOperation extends WindowAdapter {
             frame.dispose();
             System.exit(0);
         }
-
     }
 }
