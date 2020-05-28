@@ -1,3 +1,8 @@
+package model;
+import view.ResponsePanel;
+import view.Info;
+import view.ResponsePanel;
+
 import java.util.ArrayList;
 
 public class Response {
@@ -22,7 +27,8 @@ public class Response {
         responseSize="hi";
         responseText="";
         this.headers=headers;
-        this.responsePanel=new ResponsePanel(this);
+        Response response=this;
+        this.responsePanel=new ResponsePanel(response);
 
 
     }

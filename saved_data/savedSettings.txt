@@ -1,3 +1,0 @@
-FollowRedirect false
-HideInTray false
-Resolution 1000 470

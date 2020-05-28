@@ -1,5 +1,4 @@
-
-import com.sun.xml.internal.ws.api.message.Header;
+package view;
 
 import javax.swing.*;
 import java.awt.*;
@@ -7,7 +6,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-
+import model.*;
 /**
  * panel for request
  */
@@ -22,7 +21,7 @@ public class RequestPanel extends JPanel {
      * @param request the request which is panel for
      * @param model the JList which requests are stored in
      */
-    public RequestPanel(Request request,JList<Request> model) {
+    public RequestPanel(Request request, JList<Request> model) {
         //setting panel's attributes
         setLayout(new BorderLayout());
         this.request = request;
@@ -74,11 +73,11 @@ public class RequestPanel extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String option = (String) methodList.getSelectedItem();
-                    request.setOption(option);
+                    request.setMethod(option);
                     requestJList.updateUI();
                 }
             });
-            String option=request.getOption();
+            String option=request.getMethod();
             methodList.setSelectedIndex(findSelectedIndex(option));
 
             //creating textField for url
@@ -275,7 +274,7 @@ public class RequestPanel extends JPanel {
         /**
          * add created listeners to components
          * @param infoBox the info Box shown in panel
-         * @param list the map of Info and info boxes
+         * @param list the map of view.Info and info boxes
          * @param parentPanel the parent panel
          * @param panelType the type of panel (Header or formData)
          */
@@ -296,7 +295,7 @@ public class RequestPanel extends JPanel {
         }
 
         /**
-         * a listener for text Fields to automatically add new InfoBox when clicking the last one
+         * a listener for text Fields to automatically add new view.InfoBox when clicking the last one
          */
         public class AutomaticAddingHandler extends MouseAdapter {
             private HashMap<Info,InfoBox>list;
@@ -370,7 +369,7 @@ public class RequestPanel extends JPanel {
              * whenever user clicks the button
              * first it shows a warning dialog
              * and if user choose to delete it  it will
-             * remove the Info from the list and will remove info box from the panel
+             * remove the view.Info from the list and will remove info box from the panel
              * and sets the previous box as the last one
              * @param e
              */

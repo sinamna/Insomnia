@@ -1,3 +1,8 @@
+package model;
+
+import view.Info;
+import view.RequestPanel;
+
 import javax.swing.*;
 import java.util.ArrayList;
 
@@ -6,21 +11,21 @@ public class Request {
     private Response response;
     private String requestName;
     private String url;
-    private String option;
-    //Info type are key-valued types
+    private String method;
+    //view.Info type are key-valued types
     private ArrayList<Info> headers;
     private ArrayList<Info> formData;
 
     /**
      * constructs a request with given name and option  and the list which this requested is located in
      * @param requestName the name of the request
-     * @param option the request option
+     * @param method the request option
      * @param listModel the list of requests being displayed in another panel
      */
-    public Request(String requestName, String option, JList<Request>listModel) {
+    public Request(String requestName, String method, JList<Request>listModel) {
         //setting fields
         this.requestName = requestName;
-        this.option = option;
+        this.method = method;
         headers = new ArrayList<>();
         formData=new ArrayList<>();
         requestPanel = new RequestPanel(this,listModel);
@@ -67,15 +72,15 @@ public class Request {
     }
 
     /**
-     * sets this request's option
-     * @param option option to be set
+     * sets this request's method
+     * @param method method to be set
      */
-    public void setOption(String option) {
-        this.option = option;
+    public void setMethod(String method) {
+        this.method = method;
     }
 
     /**
-     * adds new Info to header list
+     * adds new view.Info to header list
      * @param headerToAdd the info to be added to header list
      */
     public void addHeaderInfo(Info headerToAdd) {
@@ -84,7 +89,7 @@ public class Request {
     }
 
     /**
-     * add new Info to formData list
+     * add new view.Info to formData list
      * @param dataToAdd new data to be added to formData list
      */
     public void addDataInfo(Info dataToAdd){
@@ -94,10 +99,10 @@ public class Request {
 
     /**
      *
-     * @return the option of request
+     * @return the method of request
      */
-    public String getOption() {
-        return option;
+    public String getMethod() {
+        return method;
     }
 
     /**

@@ -1,12 +1,11 @@
+package view;
+
 import javax.swing.*;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-
+import model.*;
 /**
  * a panel with logo and a list of requests
  */
@@ -55,7 +54,7 @@ public class RequestListPanel extends JPanel {
             super(new BorderLayout());
             setPreferredSize(new Dimension(120,350));
             // add request Button
-            addRequestBtn = new JButton("Add Request");
+            addRequestBtn = new JButton("Add model.Request");
             addRequestBtn.addActionListener(new NewRequestHandler());
 //            addRequestBtn.setPreferredSize(new Dimension(100,30));
 
@@ -86,7 +85,7 @@ public class RequestListPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // create JDialog
                 addDialog = new JDialog();
-                addDialog.setTitle("New Request");
+                addDialog.setTitle("New model.Request");
                 addDialog.setLocationRelativeTo(RequestListPanel.this);
                 addDialog.setLayout(new BoxLayout(addDialog.getContentPane(),BoxLayout.Y_AXIS));
                 addDialog.setSize(800,200);
@@ -215,8 +214,8 @@ public class RequestListPanel extends JPanel {
                 shownPanel.setPreferredSize(new Dimension(100,30));
 
                 //creating labels
-                JLabel requestOption=new JLabel(request.getOption());
-                setColorForOption(requestOption,request.getOption());
+                JLabel requestOption=new JLabel(request.getMethod());
+                setColorForOption(requestOption,request.getMethod());
                 JLabel requestName=new JLabel(request.getRequestName());
                 requestName.setForeground(Color.WHITE);
 

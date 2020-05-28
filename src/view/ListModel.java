@@ -1,3 +1,5 @@
+package view;
+import model.*;
 import javax.swing.*;
 
 public class ListModel extends DefaultListModel<Request> {

@@ -1,11 +1,12 @@
+package view;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.HashMap;
 
 /**
  * a panel with key-valued feature and textFields and arranged components
- * with the ability to save its data to Info obj
+ * with the ability to save its data to view.Info obj
  */
 public class InfoBox extends JPanel {
     private JTextField key;
@@ -70,7 +71,7 @@ public class InfoBox extends JPanel {
     }
 
     /**
-     * saves the textFields text into Info String fields whenever loses focus
+     * saves the textFields text into view.Info String fields whenever loses focus
      */
     public class SaveInfoHandler extends FocusAdapter {
         @Override

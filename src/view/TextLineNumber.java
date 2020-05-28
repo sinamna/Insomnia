@@ -1,3 +1,5 @@
+package view;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
@@ -11,7 +13,7 @@ import javax.swing.text.*;
 
 /**
  *  This class will display line numbers for a related text component. The text
- *  component must use the same line height for each line. TextLineNumber
+ *  component must use the same line height for each line. view.TextLineNumber
  *  supports wrapped lines and will highlight the line number of the current
  *  line in the text component.
  *
@@ -166,9 +168,9 @@ public class TextLineNumber extends JPanel
      *  Specify the horizontal alignment of the digits within the component.
      *  Common values would be:
      *  <ul>
-     *  <li>TextLineNumber.LEFT
-     *  <li>TextLineNumber.CENTER
-     *  <li>TextLineNumber.RIGHT (default)
+     *  <li>view.TextLineNumber.LEFT
+     *  <li>view.TextLineNumber.CENTER
+     *  <li>view.TextLineNumber.RIGHT (default)
      *	</ul>
      *  @param digitAlignment  the Color used to render the current line
      */
