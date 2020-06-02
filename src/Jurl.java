@@ -6,6 +6,8 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Jurl {
     private static HttpURLConnection connection;
@@ -21,56 +23,104 @@ public class Jurl {
     private static InputStream inputStream;
     private static String boundary;
     private static HashMap<String,String> formDataMap;
-    public Jurl(){
+    public static void main(String[] args) {
+        setDefaults();
+        commandLine = args;
+        createHTTPConnection();
+        fireRequest();
+        connection.disconnect();
+    }
+    private static void setDefaults(){
         showResponseHeader=false;
         isRedirectAllowed=false;
         saveRequestPermission=false;
         saveResponsePermission=false;
         responseName=null;
         requestsFile=new File(SAVING_DIRECTORY+"list.requests");
-        boundary=System.currentTimeMillis()+"";
+        boundary="-----------"+System.currentTimeMillis();
         formDataMap=new HashMap<>();
     }
-    public static void main(String[] args) {
-        System.out.println(System.getProperty("user.dir"));
-        commandLine = args;
-        createHTTPConnection();
-    }
-
     private static void createHTTPConnection() {
         try {
             setUrl();
             connection = (HttpURLConnection) url.openConnection();
             setMethod();
             setHeaders();
+            setShowResponseHeader();
             if(connection.getRequestMethod().equals("POST")){
                 connection.setRequestProperty("Content-Type","multipart/form-data; boundary="+boundary);
+                connection.setDoOutput(true);
                 BufferedOutputStream formDataOutput=new BufferedOutputStream(connection.getOutputStream());
                 generateFormDataBody();
                 Utils.bufferOutFormData(formDataMap,boundary,formDataOutput);
+            }else if(connection.getRequestMethod().equals("HEAD")){
+                showResponseHeader=true;
             }
         } catch (MalformedURLException e) {
 //            e.printStackTrace();
             System.out.println("entered url is malformed");
             System.out.println(url);
 
-        } catch (IOException e) {
-//            e.printStackTrace();
+        } catch (IOException | NullPointerException e) {
+            e.printStackTrace();
             System.out.println("Connection couldn't be established");
         }
+
     }
-    private static void getResponse(){
+    private static void fireRequest(){
         try {
-            inputStream=connection.getInputStream();
+//
+            System.out.println(connection.getResponseCode()+" - "+connection.getResponseMessage());
+            if (connection.getResponseCode()/100==2)
+                inputStream=connection.getInputStream();
+            if(showResponseHeader)
+                printResponseHeaders();
+
+            if(!(connection.getRequestMethod().equals("HEAD"))&&
+                    connection.getResponseCode()== HttpURLConnection.HTTP_OK){
+                String responseBody=getResponseBody();
+                System.out.println(responseBody);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }finally{
 //            inputStream.close();
         }
     }
+    private static String getResponseBody(){
+        BufferedReader input=new BufferedReader(new InputStreamReader(inputStream));
+        String line;
+        StringBuilder responseBody=new StringBuilder();
+        try{
+            while((line=input.readLine())!=null){
+                responseBody.append(line);
+            }
+            input.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return responseBody.toString();
+    }
+    //method for printing response headers
+    private static void printResponseHeaders(){
+        Map<String, List<String>> map=connection.getHeaderFields();
+        for(String key:map.keySet()){
+            System.out.print(key+": ");
+            List <String>values=map.get(key);
+            for(String value:values){
+                System.out.println(" "+value);
+            }
+        }
+    }
     //method for setting url
     private static void setUrl() throws MalformedURLException {
-        url=new URL(commandLine[0]);
+        try {
+            url=new URL(commandLine[0]);
+
+        }catch (ArrayIndexOutOfBoundsException e){
+            System.out.println("note that url should be placed at the first place . syntax -> Jurl (url) ...");
+        }
+
     }
     //method for setting headers  -H --headers
     private static void setHeaders(){
@@ -177,11 +227,13 @@ public class Jurl {
                         formData=formData.replaceAll("^\"|\"$","");
                         String[] formDataParts=formData.split("=");
                         formDataMap.put(formDataParts[0],formDataParts[1]);
+//                        System.out.println(formDataParts[0]+"="+formDataParts[1]);
                     }
                 }catch (IndexOutOfBoundsException e){
                     System.out.println("You didn't enter form-data");
                 }catch (Exception e){
-                    System.out.println("error in form data body");
+                    e.printStackTrace();
+                    System.out.println("error in form data body . Syntax -> -d/--data \"key=value\"");
                 }
 
             }

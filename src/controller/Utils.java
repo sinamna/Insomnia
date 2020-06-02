@@ -10,13 +10,18 @@ import java.util.HashMap;
 public class Utils {
     public static void bufferOutFormData(HashMap<String,String> formDataMap, String boundary
             , BufferedOutputStream bufferedOutputStream) throws IOException {
-        for(String key:formDataMap.keySet()){
-            bufferedOutputStream.write(("--"+boundary+"\r\n").getBytes());
-            bufferedOutputStream.write(("Content Disposition: form-data: name=\""+key +"\"\r\n\r\n").getBytes());
-            bufferedOutputStream.write((formDataMap.get(key)+"\r\n").getBytes());
+        try{
+            for(String key:formDataMap.keySet()){
+                bufferedOutputStream.write(("--"+boundary+"\r\n").getBytes());
+                bufferedOutputStream.write(("Content Disposition: form-data; name=\""+key +"\"\r\n\r\n").getBytes());
+                bufferedOutputStream.write((formDataMap.get(key)+"\r\n").getBytes());
+            }
+            bufferedOutputStream.write(("--"+boundary+"--\r\n").getBytes());
+            bufferedOutputStream.flush();
+            bufferedOutputStream.close();
+        }catch (NullPointerException e){
+            System.out.println("You didn't specified form-data");
         }
-        bufferedOutputStream.write(("--"+boundary+"\r\n").getBytes());
-        bufferedOutputStream.flush();
-        bufferedOutputStream.close();
+
     }
 }
