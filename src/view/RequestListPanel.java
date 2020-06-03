@@ -54,7 +54,7 @@ public class RequestListPanel extends JPanel {
             super(new BorderLayout());
             setPreferredSize(new Dimension(120,350));
             // add request Button
-            addRequestBtn = new JButton("Add model.Request");
+            addRequestBtn = new JButton("Add Request");
             addRequestBtn.addActionListener(new NewRequestHandler());
 //            addRequestBtn.setPreferredSize(new Dimension(100,30));
 
