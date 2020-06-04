@@ -4,10 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
+import java.net.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +29,9 @@ public class Jurl {
 
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
-        String commandLine = input.nextLine();
-        createHTTPConnection(commandLine.split(" "));
-        connection.disconnect();
+        String[] commandLine = input.nextLine().trim().split(" ");
+        createHTTPConnection(commandLine);
+//        connection.disconnect();
     }
 
     private static void setDefaults() {
@@ -86,12 +83,11 @@ public class Jurl {
 
     private static void fireRequest() throws WrongUserInputException {
         try {
-//
             System.out.println(connection.getResponseCode() + " - " + connection.getResponseMessage());
             //todo :idk yet but this is wrong
-            int status=connection.getResponseCode();
+            int status = connection.getResponseCode();
             if (status / 100 == 2)
-                inputStream = connection.getInputStream();
+             inputStream = connection.getInputStream();
 
             //printing response headers
             if (showResponseHeader)
@@ -107,11 +103,15 @@ public class Jurl {
                 Utils.saveResponseToFile(SAVING_DIRECTORY, responseName, getResponseBody(),
                         connection.getHeaderField("Content-Type"));
 
-            if(isRedirectAllowed){
+            if (isRedirectAllowed) {
 
             }
+        } catch(UnknownHostException e){
+            System.out.println("Unknown Host ");
+            throw new WrongUserInputException();
         } catch (IOException e) {
             e.printStackTrace();
+            throw new WrongUserInputException();
         } finally {
 //            inputStream.close();
         }
@@ -219,7 +219,7 @@ public class Jurl {
     private static void setRedirectPermission() {
         for (String command : commandLine) {
             if (command.equals("-f"))
-                isRedirectAllowed=true;
+                isRedirectAllowed = true;
         }
     }
 
@@ -343,19 +343,24 @@ public class Jurl {
 
     }
 
-    //method for setting message body in JSON structure -j --json   (emtiazi)
-    //TODO do the json shit
+    //method for setting message body in JSON structure -j --json   (bounce)
+    //TODO do the json shit --------------------- do this shit nigga
     private static void generateJSONBody() throws WrongUserInputException {
-
         for (int commandIndex = 0; commandIndex < commandLine.length; commandIndex++) {
             if (commandLine[commandIndex].equals("-j") || commandLine[commandIndex].equals("--json")) {
-                connection.setRequestProperty("Content-Type", "application/json; utf-8");
+                connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
                 connection.setRequestProperty("Accept", "application/json");
                 try {
                     String nextCommandValue = commandLine[commandIndex + 1];
                     //if next argument not be valid it throws a JSON exception
-                    JSONObject jsonObj = new JSONObject(nextCommandValue);
-                    jsonBody = nextCommandValue;
+                    if(!nextCommandValue.startsWith("-")){
+                        nextCommandValue=nextCommandValue.replaceAll("^\"|\"$", "");
+                        System.out.println(nextCommandValue);
+                        JSONObject jsonObj = new JSONObject(nextCommandValue);
+                        jsonBody = nextCommandValue;
+                    }
+                    else
+                        throw new IndexOutOfBoundsException();
                 } catch (IndexOutOfBoundsException ex) {
                     System.out.println("You didn't enter json body");
                     throw new WrongUserInputException();
