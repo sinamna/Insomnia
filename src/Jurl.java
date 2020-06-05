@@ -1,5 +1,4 @@
 import controller.Utils;
-import netscape.javascript.JSObject;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,7 +28,10 @@ public class Jurl {
 
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
-        String[] commandLine = input.nextLine().trim().split(" ");
+        String[] commandLine = input.nextLine()
+                .replaceAll("\\s{2,}"," ")//this code replaces 2 or more spaces with one space
+                .trim()
+                .split(" ");
         createHTTPConnection(commandLine);
 //        connection.disconnect();
     }
@@ -61,6 +63,8 @@ public class Jurl {
             setSaveResponsePermission();
             setRedirectPermission();
             bodyCheck();
+
+            //TODO handle different connection methods
             if (connection.getRequestMethod().equals("HEAD")) {
                 showResponseHeader = true;
             }
@@ -88,23 +92,31 @@ public class Jurl {
             int status = connection.getResponseCode();
             if (status / 100 == 2)
              inputStream = connection.getInputStream();
-
+            //TODO sometimes the server returns a page as an error ...so u should fix that condition which it only make
+            // input stream when connection is ok
             //printing response headers
             if (showResponseHeader)
                 printResponseHeaders();
+
             if (!(connection.getRequestMethod().equals("HEAD")) &&
                     connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 receiveResponseBody();
-                System.out.println(new String(responseBody));
+                System.out.println(new String(responseBody)); // converts the byte of response body to string and prints it
+
             }
 
             //saving response based on boolean value
-            if (saveResponsePermission)
+            if (saveResponsePermission&&status==HttpURLConnection.HTTP_OK)
                 Utils.saveResponseToFile(SAVING_DIRECTORY, responseName, getResponseBody(),
                         connection.getHeaderField("Content-Type"));
 
-            if (isRedirectAllowed) {
-
+            if (isRedirectAllowed && status/100==3) {
+                String newUrl=connection.getHeaderField("Location");
+                System.out.println("Redirecting to : "+newUrl+"... \n");
+                String[] newCommandLine=convertToString(commandLine).replaceAll(url.toString(),newUrl).split(" ");
+                System.out.println(convertToString(newCommandLine));
+                createHTTPConnection(newCommandLine);
+                throw new WrongUserInputException();
             }
         } catch(UnknownHostException e){
             System.out.println("Unknown Host ");
@@ -116,7 +128,13 @@ public class Jurl {
 //            inputStream.close();
         }
     }
-
+    private static String convertToString(String[] stringArray){
+        StringBuilder newString=new StringBuilder();
+        for(String string:stringArray){
+            newString.append(string).append(" ");
+        }
+        return newString.toString().trim();
+    }
     private static void receiveResponseBody() throws IOException {
 //        BufferedReader input = new BufferedReader(new InputStreamReader(inputStream));
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -200,7 +218,7 @@ public class Jurl {
                         }
 
                     }
-                    // TODO: 6/2/2020 connection should be disconnected when user enters the wrong input
+                    // TODO: 6/2/2020 connection should be disconnected when user enters the wrong input ->DONE
                     System.out.println("entered method isn't valid");
                     throw new WrongUserInputException();
 
@@ -315,6 +333,9 @@ public class Jurl {
                 dataOutput = new BufferedOutputStream(connection.getOutputStream());
                 Utils.bufferOutJSON(jsonBody, dataOutput);
             }
+        }else if(isBodyForm||isBodyJson){
+            System.out.println("You are specifying a request bod with a non POST method");
+            throw new WrongUserInputException();
         }
     }
 
@@ -324,12 +345,13 @@ public class Jurl {
         for (int commandIndex = 0; commandIndex < commandLine.length; commandIndex++) {
             if (commandLine[commandIndex].equals("-d") || commandLine[commandIndex].equals("--data")) {
                 try {
+                    //TODO  check for the next argument is a form data or not
                     if (!(commandLine[commandIndex + 1].startsWith("-"))) {
                         String formData = commandLine[commandIndex + 1];
                         formData = formData.replaceAll("^\"|\"$", "");
                         String[] formDataParts = formData.split("=");
                         formDataMap.put(formDataParts[0], formDataParts[1]);
-//                        System.out.println(formDataParts[0]+"="+formDataParts[1]);
+
                     }
                 } catch (IndexOutOfBoundsException e) {
                     System.out.println("You didn't enter form-data");
@@ -355,7 +377,6 @@ public class Jurl {
                     //if next argument not be valid it throws a JSON exception
                     if(!nextCommandValue.startsWith("-")){
                         nextCommandValue=nextCommandValue.replaceAll("^\"|\"$", "");
-                        System.out.println(nextCommandValue);
                         JSONObject jsonObj = new JSONObject(nextCommandValue);
                         jsonBody = nextCommandValue;
                     }

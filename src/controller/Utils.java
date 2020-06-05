@@ -1,15 +1,11 @@
 package controller;
 
-import view.Info;
-
 import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -17,10 +13,15 @@ public class Utils {
     public static void bufferOutFormData(HashMap<String,String> formDataMap, String boundary
             , BufferedOutputStream bufferedOutputStream) throws IOException {
         try{
+//            System.out.println(formDataMap);
+//            StringBuilder str=new StringBuilder();
             for(String key:formDataMap.keySet()){
                 bufferedOutputStream.write(("--"+boundary+"\r\n").getBytes());
-                bufferedOutputStream.write(("Content Disposition: form-data; name=\""+key +"\"\r\n\r\n").getBytes());
+//                str.append("--"+boundary+"\r\n").append("Content Disposition: form-data; name=\""+key +"\"\r\n\r\n")
+//                        .append(formDataMap.get(key)+"\r\n");
+                bufferedOutputStream.write(("Content-Disposition: form-data; name=\""+key +"\"\r\n\r\n").getBytes());
                 bufferedOutputStream.write((formDataMap.get(key)+"\r\n").getBytes());
+//                System.out.println(str.toString());
             }
             bufferedOutputStream.write(("--"+boundary+"--\r\n").getBytes());
             bufferedOutputStream.flush();
@@ -30,8 +31,15 @@ public class Utils {
             System.out.println("You didn't specified form-data");
         }
     }
-    public static void bufferOutJSON(String jsonBody,BufferedOutputStream bufferedOutputStream){
 
+
+
+
+
+
+    public static void bufferOutJSON(String jsonBody,BufferedOutputStream bufferedOutputStream) throws IOException {
+        byte[] jsonBodyBytes=jsonBody.getBytes();
+        bufferedOutputStream.write(jsonBodyBytes,0,jsonBodyBytes.length);
     }
     public static void saveResponseToFile(String directory,String name,byte[] responseBody,String contentType){
         if(name==null){
@@ -44,6 +52,8 @@ public class Utils {
                 name+=".html";
             else if (type.equals("image/png"))
                 name+=".png";
+            else if(type.equals("text/plain"))
+                name+=".txt";
         }
 
         //the current path is in src folder and we want to save data to "saved_data" app
@@ -56,12 +66,14 @@ public class Utils {
         try {
             BufferedOutputStream writer=new BufferedOutputStream(new FileOutputStream(filePath));
             writer.write(responseBody);
-            System.out.println("file saved");
+            System.out.println("\n**file saved**");
             writer.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }catch (NullPointerException e){
+            System.out.println("There is no response body to write to file.");
         }
 
     }
