@@ -139,4 +139,52 @@ public class Utils {
         String[] requests = requestList.split("&");
         return requests;
     }
+
+    public static String createCommandLine(String requestDetails) {
+        StringBuilder requestCommandLine = new StringBuilder();
+        String[] requestParts = requestDetails.trim().split("#");
+        // url is the first part of request
+        String[] urlParts = requestParts[0].split(":");
+        requestCommandLine.append(urlParts[1]).append(":").append(urlParts[2]).append(" ");
+        // method is the second part
+        requestCommandLine.append("-M ").append(requestParts[1].split(":")[1]).append(" ");
+        //headers are the third parts
+        try {
+            String[] headers = requestParts[2].split(":")[1].split(";");
+            for (String header : headers) {
+                header = header.replaceAll("=", ":");
+                requestCommandLine.append("-H ").append("\"").append(header).append("\" ");
+            }
+        } catch (IndexOutOfBoundsException e) {
+            //does nothing
+        }
+        //request bodies are in 4th part
+        try {
+            String[] bodies = requestParts[3].split(":")[1].split(";");
+            for (String body : bodies) {
+                String[] bodyParts = body.split("=");
+                if (bodyParts[0].equals("form-data")) {
+                    requestCommandLine.append("-d ").append("\"").append(bodyParts[1]).append("=")
+                            .append(bodyParts[2]).append("\" ");
+                } else {
+                    requestCommandLine.append("--json ").append(bodyParts[1]).append(" ");
+                }
+            }
+        } catch (IndexOutOfBoundsException e) {
+            //does nothing
+        }
+
+        //redirect permission is in 5th position
+        if (requestParts[4].split(":")[1].equals("true"))
+            requestCommandLine.append("-f ");
+
+        //showing header option is in 6th position
+        if (requestParts[5].split(":")[1].equals("true"))
+            requestCommandLine.append("-i ");
+
+        System.out.println(requestCommandLine.toString());
+        return requestCommandLine.toString();
+    }
+
+
 }
