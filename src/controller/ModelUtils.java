@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
-public class Utils {
+public class ModelUtils {
     public static void bufferOutFormData(HashMap<String, String> formDataMap, String boundary
             , BufferedOutputStream bufferedOutputStream) throws IOException {
         try {

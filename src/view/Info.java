@@ -9,6 +9,11 @@ public class Info {
         value=null;
         enabled=false;
     }
+    public Info(String key,String value){
+        enabled=true;
+        this.key=key;
+        this.value=value;
+    }
     public void setKey(String key) {
         this.key = key;
     }

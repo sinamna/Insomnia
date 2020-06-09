@@ -72,8 +72,8 @@ public class ResponsePanel extends JPanel {
             super(new FlowLayout(FlowLayout.LEFT));
 
             //Initializing fields
-            statusCode = new ResponseDetail("200");
-            statusMessage = new ResponseDetail("Ok");
+            statusCode = new ResponseDetail(response.getStatusCode());
+            statusMessage = new ResponseDetail(response.getStatusMessage());
             elapsedTime = new ResponseDetail("6.2 s");
             responseSize = new ResponseDetail("73.3 kb");
 
@@ -139,8 +139,8 @@ public class ResponsePanel extends JPanel {
             headerPanel=new HeaderPanel();
 
             //adding panels to mainPanel
-            mainPanel.add(rawBody,"Raw");
-            mainPanel.add(previewBody,"Preview");
+            mainPanel.add(new JScrollPane(rawBody),"Raw");
+            mainPanel.add(new JScrollPane(previewBody),"Preview");
             mainPanel.add(new JScrollPane(headerPanel),"Header");
 
         }
@@ -161,7 +161,7 @@ public class ResponsePanel extends JPanel {
             if(!response.getResponseText().isEmpty())
                 display.setText(response.getResponseText());
             else
-                display.setText("Error: URL using bad/illegal format or missing URL");
+                display.setText("No body returned");
             add(display,BorderLayout.CENTER);
         }
     }
@@ -197,6 +197,7 @@ public class ResponsePanel extends JPanel {
          */
         public HeaderPanel(){
             setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+            setPreferredSize(new Dimension(400,550));
             // name Label
             nameLabel=new JLabel("Name");
             nameLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -259,17 +260,18 @@ public class ResponsePanel extends JPanel {
                 key.setText(keyText);
                 key.setHorizontalAlignment(JTextField.CENTER);
                 key.setEditable(false);
-                key.setMaximumSize(new Dimension(1000,30));
+                key.setMaximumSize(new Dimension(200,60));
+                key.setMinimumSize(new Dimension(150,60));
 
                 //setting value textField
                 value=new JTextField();
                 value.setText(valueText);
                 value.setHorizontalAlignment(JTextField.CENTER);
                 value.setEditable(false);
-                value.setMaximumSize(new Dimension(1000,30));
+                value.setMaximumSize(new Dimension(220,60));
 
                 //adding components to the panels
-                add(Box.createRigidArea(new Dimension(10,5)));
+                add(Box.createRigidArea(new Dimension(20,5)));
                 add(key);
                 add(Box.createRigidArea(new Dimension(5,5)));
                 add(value);

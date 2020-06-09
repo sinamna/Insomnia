@@ -3,7 +3,9 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import model.*;
@@ -129,14 +131,47 @@ public class RequestPanel extends JPanel {
              */
             @Override
             public void actionPerformed(ActionEvent e) {
-                Response newResponse = new Response(request.getHeaders());
-                request.setResponse(newResponse);
-                splitPane.setRightComponent(newResponse.getResponsePanel());
-                splitPane.updateUI();
-                requestSent = true;
+
+                SwingWorker<Void,Void> swingWorker=new SwingWorker<Void, Void>() {
+                    private String response;
+                    @Override
+                    protected Void doInBackground(){
+                        try{
+                            String[] requestCommandLine=request.createCommandLine()
+                                    .replaceAll("\\s{2,}", " ")//this code replaces 2 or more spaces with one space
+                                    .trim()
+                                    .split(" ");
+
+                            response =Jurl.createHTTPConnection(requestCommandLine,true);
+                        } catch (MalformedURLException | ErrorException ex) {
+//                            ex.printStackTrace();
+                            this.cancel(true);
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+//                        super.done();
+                        if(!isCancelled()){
+                            try{
+                                Response newResponse = new Response(response);
+                                request.setResponse(newResponse);
+                                splitPane.setRightComponent(newResponse.getResponsePanel());
+                                splitPane.updateUI();
+                                requestSent = true;
+                            }catch (ErrorException ex){
+                                //do nothing
+                            }
+
+                        }
+                    }
+                };
+                swingWorker.execute();
+
+
             }
         }
-
         /**
          * listener for the time delete button is pressed
          */
@@ -470,6 +505,12 @@ public class RequestPanel extends JPanel {
             public JsonPanel() {
                 super(new BorderLayout());
                 editor = new JEditorPane();
+                editor.addFocusListener(new FocusAdapter() {
+                    @Override
+                    public void focusLost(FocusEvent e) {
+                        request.setJsonBody(editor.getText());
+                    }
+                });
                 lineNumber = new TextLineNumber(editor);
                 //adding components
                 add(editor, BorderLayout.CENTER);

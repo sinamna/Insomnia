@@ -416,4 +416,5 @@ public class MainFrame extends JFrame{
     public boolean getHideInTray(){
         return hideInTray;
     }
+
 }
