@@ -3,12 +3,13 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ExecutionException;
+
 import model.*;
+
 /**
  * panel for request
  */
@@ -20,15 +21,17 @@ public class RequestPanel extends JPanel {
 
     /**
      * constructs panel for given request
+     *
      * @param request the request which is panel for
-     * @param model the JList which requests are stored in
+     * @param model   the JList which requests are stored in
      */
     public RequestPanel(Request request, JList<Request> model) {
         //setting panel's attributes
         setLayout(new BorderLayout());
         this.request = request;
+//        request.setFollowRedirect(MainFrame.getFollowRedirect());
         requestSent = false;
-        this.requestJList=model;
+        this.requestJList = model;
         setPreferredSize(new Dimension(370, 550));
         setMinimumSize(new Dimension(100, 400));
 
@@ -38,13 +41,12 @@ public class RequestPanel extends JPanel {
         CenterPanel centerPanel = new CenterPanel();
 
         //adding components to panels
-        add(upperPanel,BorderLayout.NORTH);
-        add(centerPanel,BorderLayout.CENTER);
+        add(upperPanel, BorderLayout.NORTH);
+        add(centerPanel, BorderLayout.CENTER);
     }
 
     /**
      * the upper panel of request panel which contains a check box a textField and 2 buttons
-     *
      */
     private class UpperPanel extends JPanel {
         String[] options;
@@ -62,9 +64,9 @@ public class RequestPanel extends JPanel {
             setMaximumSize(new Dimension(1000, 40));
 
             //creating comboBox
-            options = new String[]{"GET", "DELETE", "POST", "PUT", "PATCH"};
+            options = new String[]{"GET", "DELETE", "POST", "PUT", "HEAD"};
             methodList = new JComboBox(options);
-            methodList.setPreferredSize(new Dimension(methodList.getPreferredSize().width,methodList.getPreferredSize().height+15));
+            methodList.setPreferredSize(new Dimension(methodList.getPreferredSize().width, methodList.getPreferredSize().height + 15));
             methodList.addActionListener(new ActionListener() {
                 /**
                  * triggers when an item is chosen in combo box
@@ -79,7 +81,7 @@ public class RequestPanel extends JPanel {
                     requestJList.updateUI();
                 }
             });
-            String option=request.getMethod();
+            String option = request.getMethod();
             methodList.setSelectedIndex(findSelectedIndex(option));
 
             //creating textField for url
@@ -104,7 +106,7 @@ public class RequestPanel extends JPanel {
             sendBtn.setMinimumSize(new Dimension(30, 30));
 
             //creating button for deleting request
-            delBtn=new JButton("Delete");
+            delBtn = new JButton("Delete");
             delBtn.setMinimumSize(sendBtn.getMinimumSize());
             delBtn.addActionListener(new DelBtnHandler());
 
@@ -112,9 +114,9 @@ public class RequestPanel extends JPanel {
             add(methodList);
             add(urlText);
             //adding a panel containing send button and delete button
-            add(new JPanel(){
+            add(new JPanel() {
                 {
-                    setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+                    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
                     add(sendBtn);
                     add(delBtn);
                 }
@@ -127,25 +129,43 @@ public class RequestPanel extends JPanel {
         private class SendBtnHandler implements ActionListener {
             /**
              * creates response and update GUI to show it and set it as request's response
+             *
              * @param e action event
              */
             @Override
             public void actionPerformed(ActionEvent e) {
+                //creating swing worker to do multiThread things
+                SwingWorker<Response, Void> swingWorker = new SwingWorker<Response, Void>() {
+                    private String responseDetails;
+                    private long startTime;
+                    private long finishedTime;
 
-                SwingWorker<Void,Void> swingWorker=new SwingWorker<Void, Void>() {
-                    private String response;
                     @Override
-                    protected Void doInBackground(){
-                        try{
-                            String[] requestCommandLine=request.createCommandLine()
+                    protected Response doInBackground() {
+                        try {
+                            /*
+                            first it creates a commandline like array of string to be used in terminal program
+                             */
+                            request.setFollowRedirect(MainFrame.getFollowRedirect());
+                            startTime = System.currentTimeMillis();
+                            String[] requestCommandLine = request.createCommandLine()
                                     .replaceAll("\\s{2,}", " ")//this code replaces 2 or more spaces with one space
                                     .trim()
                                     .split(" ");
 
-                            response =Jurl.createHTTPConnection(requestCommandLine,true);
-                        } catch (MalformedURLException | ErrorException ex) {
-//                            ex.printStackTrace();
+                            //terminal program returns formatted string representing response
+                            responseDetails = Jurl.createHTTPConnection(requestCommandLine, true);
+                            if (responseDetails == null) {
+                                System.out.println("null response");
+                                throw new NullPointerException();
+                            }
+                            //new response is created using response detail string
+                            Response newResponse = new Response(responseDetails,request.getUrl());
+                            return newResponse;
+                        } catch (ErrorException ex) {
                             this.cancel(true);
+                        }catch (NullPointerException ex){
+                            ErrorException.showError("Response could't be received");
                         }
                         return null;
                     }
@@ -153,15 +173,25 @@ public class RequestPanel extends JPanel {
                     @Override
                     protected void done() {
 //                        super.done();
-                        if(!isCancelled()){
-                            try{
-                                Response newResponse = new Response(response);
+                        if (!isCancelled()) {
+                            try {
+                                //when response is created it is used to set the right panel of split pane as response panel
+                                Response newResponse = get();
+                                //calculating elapsed time and setting textfield in response panel
+                                finishedTime = System.currentTimeMillis();
+                                String elapsedTime=String.valueOf(((double)finishedTime-startTime)/1000);
+                                newResponse.getResponsePanel().setElapsedTime(elapsedTime);
+
                                 request.setResponse(newResponse);
                                 splitPane.setRightComponent(newResponse.getResponsePanel());
                                 splitPane.updateUI();
                                 requestSent = true;
-                            }catch (ErrorException ex){
-                                //do nothing
+                            } catch (NullPointerException ex) {
+                                ErrorException.showError("Error occurred while receiving Response");
+                            }
+
+                            catch (InterruptedException | ExecutionException ex) {
+                                ex.printStackTrace();
                             }
 
                         }
@@ -172,17 +202,19 @@ public class RequestPanel extends JPanel {
 
             }
         }
+
         /**
          * listener for the time delete button is pressed
          */
-        private class DelBtnHandler implements ActionListener{
+        private class DelBtnHandler implements ActionListener {
             /**
              * deletes the request from list and reset the GUI
+             *
              * @param e action Event
              */
             @Override
             public void actionPerformed(ActionEvent e) {
-                DefaultListModel<Request> model= (DefaultListModel<Request>) requestJList.getModel();
+                DefaultListModel<Request> model = (DefaultListModel<Request>) requestJList.getModel();
                 model.removeElement(request);
                 splitPane.setRightComponent(MainFrame.createVoidPanel());
                 splitPane.setLeftComponent(MainFrame.createVoidPanel());
@@ -193,20 +225,22 @@ public class RequestPanel extends JPanel {
 
         /**
          * finds the index of preSelected option in the options list
+         *
          * @param option option to be found
          * @return the index of option in the list
          */
-        private int findSelectedIndex(String option){
+        private int findSelectedIndex(String option) {
             int found = 0;
-            for(int i=0;i<options.length;i++){
+            for (int i = 0; i < options.length; i++) {
                 if (options[i].equals(option))
-                    found=i;
+                    found = i;
             }
             return found;
         }
     }
 
     //------------------------------------------------------------------------------------------------
+
     /**
      * the center panel which other panels can be navigated through
      */
@@ -214,8 +248,7 @@ public class RequestPanel extends JPanel {
         JMenuBar menuBar;
         JMenu bodyMenu;
         JMenu headerMenu;
-        JMenu authMenu;
-        JMenu query;
+//        JMenu authMenu;
         CardLayout layout;
         JPanel mainPanel;
         JPanel formDataPanel;
@@ -232,7 +265,7 @@ public class RequestPanel extends JPanel {
 
             //menubar is added to the north side of panel
             menuBar = new JMenuBar();
-            menuBar.setPreferredSize(new Dimension(menuBar.getPreferredSize().width,menuBar.getPreferredSize().height+30));
+            menuBar.setPreferredSize(new Dimension(menuBar.getPreferredSize().width, menuBar.getPreferredSize().height + 30));
             add(menuBar, BorderLayout.NORTH);
 
             // creating main panel with card Layout
@@ -257,23 +290,23 @@ public class RequestPanel extends JPanel {
             menuBar.add(headerMenu);
 
             //Auth Menu
-            authMenu = new JMenu("Auth");
-            JMenuItem bearerItem = new JMenuItem("Bearer");
-            bearerItem.addActionListener(new MenuHandler.MenuItemHandler(layout, mainPanel));
-            authMenu.add(bearerItem);
-            menuBar.add(authMenu);
+//            authMenu = new JMenu("Auth");
+//            JMenuItem bearerItem = new JMenuItem("Bearer");
+//            bearerItem.addActionListener(new MenuHandler.MenuItemHandler(layout, mainPanel));
+//            authMenu.add(bearerItem);
+//            menuBar.add(authMenu);
 
             //creating menu items panel
             formDataPanel = new FormData();
             jsonPanel = new JsonPanel();
             headerPanel = new HeaderPanel();
-            bearer = new AuthPanel();
+//            bearer = new AuthPanel();
 
             //adding panels to mainPanel
             mainPanel.add(new JScrollPane(formDataPanel), "Form Data");
             mainPanel.add(jsonPanel, "JSON");
             mainPanel.add(new JScrollPane(headerPanel), "Header");
-            mainPanel.add(bearer, "Bearer");
+//            mainPanel.add(bearer, "Bearer");
         }
 
         //---------------------------------------------------------------------
@@ -295,7 +328,7 @@ public class RequestPanel extends JPanel {
                 Info firstHeader = new Info();
                 InfoBox firstHeaderBox = new InfoBox(firstHeader);
                 firstHeaderBox.setIsLast(true);
-                addListeners(firstHeaderBox,headerList, HeaderPanel.this,"Header");
+                addListeners(firstHeaderBox, headerList, HeaderPanel.this, "Header");
                 headerList.put(firstHeader, firstHeaderBox);
 
                 //add components to panel
@@ -308,12 +341,13 @@ public class RequestPanel extends JPanel {
 
         /**
          * add created listeners to components
-         * @param infoBox the info Box shown in panel
-         * @param list the map of view.Info and info boxes
+         *
+         * @param infoBox     the info Box shown in panel
+         * @param list        the map of view.Info and info boxes
          * @param parentPanel the parent panel
-         * @param panelType the type of panel (Header or formData)
+         * @param panelType   the type of panel (Header or formData)
          */
-        public void addListeners(InfoBox infoBox,HashMap<Info,InfoBox>list,JPanel parentPanel,String panelType) {
+        public void addListeners(InfoBox infoBox, HashMap<Info, InfoBox> list, JPanel parentPanel, String panelType) {
             //getting components from infoBox
             JTextField key = infoBox.getKey();
             JTextField value = infoBox.getValue();
@@ -321,36 +355,38 @@ public class RequestPanel extends JPanel {
 
             //adding listeners to them
             key.addFocusListener(new SaveToRequest());
-            key.addMouseListener(new AutomaticAddingHandler(list,parentPanel,panelType));
+            key.addMouseListener(new AutomaticAddingHandler(list, parentPanel, panelType));
 
             value.addFocusListener(new SaveToRequest());
-            value.addMouseListener(new AutomaticAddingHandler(list,parentPanel,panelType));
+            value.addMouseListener(new AutomaticAddingHandler(list, parentPanel, panelType));
 
-            delBtn.addActionListener(new RemoveHandler(infoBox,list,parentPanel,panelType));
+            delBtn.addActionListener(new RemoveHandler(infoBox, list, parentPanel, panelType));
         }
 
         /**
          * a listener for text Fields to automatically add new view.InfoBox when clicking the last one
          */
         public class AutomaticAddingHandler extends MouseAdapter {
-            private HashMap<Info,InfoBox>list;
+            private HashMap<Info, InfoBox> list;
             private JPanel parentPanel;
             private String type;
 
             /**
              * constructs listener with given parameters
-             * @param list the list of info and infoBoxes
+             *
+             * @param list        the list of info and infoBoxes
              * @param parentPanel the parent panel
-             * @param type the type of parent panel
+             * @param type        the type of parent panel
              */
-            public AutomaticAddingHandler(HashMap<Info,InfoBox> list,JPanel parentPanel,String type){
-                this.list=list;
-                this.parentPanel=parentPanel;
-                this.type=type;
+            public AutomaticAddingHandler(HashMap<Info, InfoBox> list, JPanel parentPanel, String type) {
+                this.list = list;
+                this.parentPanel = parentPanel;
+                this.type = type;
             }
 
             /**
              * adds a new info Box at the end of the panel whenever clicking on the last one
+             *
              * @param e the MouseEvent
              */
             @Override
@@ -365,7 +401,7 @@ public class RequestPanel extends JPanel {
                     infoBox.setIsLast(false);
                     Info newInfo = new Info();
                     InfoBox newInfoBox = new InfoBox(newInfo);
-                    addListeners(newInfoBox,list,parentPanel,type);
+                    addListeners(newInfoBox, list, parentPanel, type);
                     newInfoBox.setIsLast(true);
                     list.put(newInfo, newInfoBox);
                     parentPanel.add(list.get(newInfo));
@@ -387,16 +423,17 @@ public class RequestPanel extends JPanel {
 
             /**
              * constructs the list with given parameters
-             * @param infoBox the infoBox intended to be removed
-             * @param list the list of info and infoBoxes
+             *
+             * @param infoBox     the infoBox intended to be removed
+             * @param list        the list of info and infoBoxes
              * @param parentPanel the parent panel
-             * @param type the type of parent panel
+             * @param type        the type of parent panel
              */
-            public RemoveHandler(InfoBox infoBox, HashMap<Info, InfoBox> list, JPanel parentPanel,String type) {
+            public RemoveHandler(InfoBox infoBox, HashMap<Info, InfoBox> list, JPanel parentPanel, String type) {
                 this.infoBox = infoBox;
                 this.list = list;
                 this.parentPanel = parentPanel;
-                panelType=type;
+                panelType = type;
 
             }
 
@@ -406,6 +443,7 @@ public class RequestPanel extends JPanel {
              * and if user choose to delete it  it will
              * remove the view.Info from the list and will remove info box from the panel
              * and sets the previous box as the last one
+             *
              * @param e
              */
             @Override
@@ -414,7 +452,7 @@ public class RequestPanel extends JPanel {
                         "WARNING", JOptionPane.YES_NO_OPTION);
                 if (chosenOption == JOptionPane.YES_OPTION) {
                     //the least number of components includes one Box rigid area and one info Box =2
-                    if(!(parentPanel.getComponentCount()==2)){
+                    if (!(parentPanel.getComponentCount() == 2)) {
                         list.remove(infoBox.getInfo());
                         reformRequestList();
                         parentPanel.remove(infoBox);
@@ -422,8 +460,8 @@ public class RequestPanel extends JPanel {
                         lastBox.setIsLast(true);
                         parentPanel.repaint();
                         parentPanel.revalidate();
-                    }else{
-                        JOptionPane.showMessageDialog(null,"The only box can't be deleted.");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "The only box can't be deleted.");
                     }
                 }
             }
@@ -431,16 +469,16 @@ public class RequestPanel extends JPanel {
             /**
              * it goes throw the list in request object and remove each one that its info box is removed
              */
-            private void reformRequestList(){
+            private void reformRequestList() {
                 ArrayList<Info> listToReform;
                 if (panelType.equals("Header"))
-                    listToReform=request.getHeaders();
+                    listToReform = request.getHeaders();
                 else
-                    listToReform=request.getFormData();
-                Iterator iter=listToReform.iterator();
-                while(iter.hasNext()){
-                    Info info=(Info)iter.next();
-                    if(list.get(info)==null)
+                    listToReform = request.getFormData();
+                Iterator iter = listToReform.iterator();
+                while (iter.hasNext()) {
+                    Info info = (Info) iter.next();
+                    if (list.get(info) == null)
                         iter.remove();
                 }
             }
@@ -453,6 +491,7 @@ public class RequestPanel extends JPanel {
             /**
              * whenever a textFiled loses its focues it checks and if both fields are written \
              * it will add it to list in the request
+             *
              * @param e Focus event
              */
             @Override
@@ -460,7 +499,7 @@ public class RequestPanel extends JPanel {
                 JTextField textField = (JTextField) e.getSource();
                 InfoBox infoBox = (InfoBox) textField.getParent();
                 if (infoBox.getInfo().isCompleted())
-                    if(infoBox.getParent() instanceof HeaderPanel)
+                    if (infoBox.getParent() instanceof HeaderPanel)
                         request.addHeaderInfo(infoBox.getInfo());
                     else
                         request.addDataInfo(infoBox.getInfo());
@@ -473,22 +512,23 @@ public class RequestPanel extends JPanel {
          */
         private class FormData extends JPanel {
             private HashMap<Info, InfoBox> formDataList;
-            public FormData(){
+
+            public FormData() {
                 //setting panel attribute
-                setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+                setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
                 // initialize the list
-                formDataList=new HashMap<>();
+                formDataList = new HashMap<>();
 
                 //adding first formData
-                Info firstForm=new Info();
-                InfoBox firstFormBox=new InfoBox(firstForm);
+                Info firstForm = new Info();
+                InfoBox firstFormBox = new InfoBox(firstForm);
                 firstFormBox.setIsLast(true);
-                formDataList.put(firstForm,firstFormBox);
-                addListeners(firstFormBox,formDataList,FormData.this,"FormData");
+                formDataList.put(firstForm, firstFormBox);
+                addListeners(firstFormBox, formDataList, FormData.this, "FormData");
 
                 //adding components to panel
-                add(Box.createRigidArea(new Dimension(100,25)));
+                add(Box.createRigidArea(new Dimension(100, 25)));
                 add(formDataList.get(firstForm));
             }
         }
@@ -509,6 +549,7 @@ public class RequestPanel extends JPanel {
                     @Override
                     public void focusLost(FocusEvent e) {
                         request.setJsonBody(editor.getText());
+
                     }
                 });
                 lineNumber = new TextLineNumber(editor);
@@ -525,74 +566,76 @@ public class RequestPanel extends JPanel {
 
     //-------------------------------------------------------------------------------------
 
-    /**
-     * a panel for taking token and prefix
-     */
-    private class AuthPanel extends JPanel {
-        private JLabel tokenLabel;
-        private JLabel prefixLabel;
-        private JLabel stateLabel;
-        private JTextField tokenField;
-        private JTextField prefixField;
-        private JCheckBox enabledStatus;
-        private JPanel tokenHolder;
-        private JPanel prefixHolder;
-        private JPanel stateHolder;
-
-        public AuthPanel() {
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-            // making panel to hold token label and textField
-            tokenHolder = panelMaker(tokenHolder, tokenLabel, tokenField, "Token");
-            //creating panel and its components for prefix
-            prefixHolder = panelMaker(prefixHolder, prefixLabel, prefixField, "Prefix");
-            //creating panel for check box
-            stateHolder = new JPanel();
-            stateHolder.setLayout(new BoxLayout(stateHolder, BoxLayout.X_AXIS));
-            enabledStatus = new JCheckBox();
-            enabledStatus.setSelected(true);
-            stateLabel = new JLabel("Enabled", JLabel.CENTER);
-            stateHolder.add(Box.createRigidArea(new Dimension(10, 30)));
-            stateHolder.add(stateLabel);
-            stateHolder.add(Box.createRigidArea(new Dimension(5, 30)));
-            stateHolder.add(enabledStatus);
-            //adding components to auth panel
-            add(Box.createRigidArea(new Dimension(1000, 20)));
-            add(tokenHolder);
-            add(prefixHolder);
-            add(stateHolder);
-        }
-
-        /**
-         * creates panel in customized format with given parameters
-         * @param panel the panel to be created
-         * @param label the label to be added to panel
-         * @param textField the textField to be added to panel
-         * @param usage the usage of panel
-         * @return the created panel
-         */
-        private JPanel panelMaker(JPanel panel, JLabel label, JTextField textField, String usage) {
-            //creating panel
-            panel = new JPanel();
-            panel.setMaximumSize(new Dimension(1000, 30));
-            panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-            //creating label and textField
-            label = new JLabel(usage, JLabel.CENTER);
-            textField = new JTextField(usage);
-            textField.setForeground(Color.WHITE);
-            textField.addFocusListener(new AddWaterMark(usage));
-            //adding components to panel
-            panel.add(Box.createRigidArea(new Dimension(10, 30)));
-            panel.add(label);
-            panel.add(Box.createRigidArea(new Dimension(5, 30)));
-            panel.add(textField);
-            panel.add(Box.createRigidArea(new Dimension(10, 30)));
-            return panel;
-        }
-    }
+//    /**
+//     * a panel for taking token and prefix
+//     */
+//    private class AuthPanel extends JPanel {
+//        private JLabel tokenLabel;
+//        private JLabel prefixLabel;
+//        private JLabel stateLabel;
+//        private JTextField tokenField;
+//        private JTextField prefixField;
+//        private JCheckBox enabledStatus;
+//        private JPanel tokenHolder;
+//        private JPanel prefixHolder;
+//        private JPanel stateHolder;
+//
+//        public AuthPanel() {
+//            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+//
+//            // making panel to hold token label and textField
+//            tokenHolder = panelMaker(tokenHolder, tokenLabel, tokenField, "Token");
+//            //creating panel and its components for prefix
+//            prefixHolder = panelMaker(prefixHolder, prefixLabel, prefixField, "Prefix");
+//            //creating panel for check box
+//            stateHolder = new JPanel();
+//            stateHolder.setLayout(new BoxLayout(stateHolder, BoxLayout.X_AXIS));
+//            enabledStatus = new JCheckBox();
+//            enabledStatus.setSelected(true);
+//            stateLabel = new JLabel("Enabled", JLabel.CENTER);
+//            stateHolder.add(Box.createRigidArea(new Dimension(10, 30)));
+//            stateHolder.add(stateLabel);
+//            stateHolder.add(Box.createRigidArea(new Dimension(5, 30)));
+//            stateHolder.add(enabledStatus);
+//            //adding components to auth panel
+//            add(Box.createRigidArea(new Dimension(1000, 20)));
+//            add(tokenHolder);
+//            add(prefixHolder);
+//            add(stateHolder);
+//        }
+//
+//        /**
+//         * creates panel in customized format with given parameters
+//         *
+//         * @param panel     the panel to be created
+//         * @param label     the label to be added to panel
+//         * @param textField the textField to be added to panel
+//         * @param usage     the usage of panel
+//         * @return the created panel
+//         */
+//        private JPanel panelMaker(JPanel panel, JLabel label, JTextField textField, String usage) {
+//            //creating panel
+//            panel = new JPanel();
+//            panel.setMaximumSize(new Dimension(1000, 30));
+//            panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+//            //creating label and textField
+//            label = new JLabel(usage, JLabel.CENTER);
+//            textField = new JTextField(usage);
+//            textField.setForeground(Color.WHITE);
+//            textField.addFocusListener(new AddWaterMark(usage));
+//            //adding components to panel
+//            panel.add(Box.createRigidArea(new Dimension(10, 30)));
+//            panel.add(label);
+//            panel.add(Box.createRigidArea(new Dimension(5, 30)));
+//            panel.add(textField);
+//            panel.add(Box.createRigidArea(new Dimension(10, 30)));
+//            return panel;
+//        }
+//    }
 
     /**
      * sets the split pane
+     *
      * @param splitPane split Pane to be set
      */
     public void setSplitPane(JSplitPane splitPane) {
@@ -601,6 +644,7 @@ public class RequestPanel extends JPanel {
 
     /**
      * returns if request is send or not
+     *
      * @return state of request
      */
     public boolean isRequestSent() {

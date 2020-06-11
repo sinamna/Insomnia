@@ -1,6 +1,8 @@
 package view;
 
-public class Info {
+import java.io.Serializable;
+
+public class Info  {
     private String key;
     private String value;
     private boolean enabled;

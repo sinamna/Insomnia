@@ -9,6 +9,6 @@ public class ErrorException extends Exception {
         ErrorException.showError(errorMassage);
     }
     public static void showError(String error) {
-        JOptionPane.showMessageDialog(null, error, "Inane error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, error, "Error occurred", JOptionPane.ERROR_MESSAGE);
     }
 }

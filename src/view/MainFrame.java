@@ -10,7 +10,7 @@ import com.github.weisj.darklaf.DarkLaf;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.DarculaTheme;
 
-public class MainFrame extends JFrame{
+public class MainFrame extends JFrame {
     private RequestListPanel listPanel;
     private JMenuBar menuBar;
     private JMenu applicationMenu;
@@ -18,12 +18,13 @@ public class MainFrame extends JFrame{
     private JMenu helpMenu;
     //boolean variables to save details
     private boolean hideInTray;
-    private boolean followRedirect;
+    private static boolean followRedirect;
     private boolean isFullScreen;
     private Dimension lastSize;
     private GraphicsEnvironment env;
     private GraphicsDevice device;
     private JSplitPane mainBody, reqAndResponseSplit;
+    public final String SAVING_DIRECTORY="saved_data"+File.separator;
 
     /**
      * constructs a frame with menu bar and 2 splitPanes
@@ -415,6 +416,14 @@ public class MainFrame extends JFrame{
      */
     public boolean getHideInTray(){
         return hideInTray;
+    }
+
+    /**
+     *
+     * @return the followRedirect value of program
+     */
+    public static boolean getFollowRedirect(){
+        return followRedirect;
     }
 
 }

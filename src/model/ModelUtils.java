@@ -1,4 +1,4 @@
-package controller;
+package model;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -6,7 +6,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
+/**
+ * class containing static methods doing model.Jurl program operations
+ */
 public class ModelUtils {
+    /**
+     * sends form data to using given output stream
+     * @param formDataMap the map of form-data body
+     * @param boundary the boundary to split different parts
+     * @param bufferedOutputStream the output stream of the connection
+     * @throws IOException IOException
+     */
     public static void bufferOutFormData(HashMap<String, String> formDataMap, String boundary
             , BufferedOutputStream bufferedOutputStream) throws IOException {
         try {
@@ -25,12 +35,24 @@ public class ModelUtils {
         }
     }
 
-
+    /**
+     * send json body to the specified output stream
+     * @param jsonBody json body to be sent
+     * @param bufferedOutputStream the output stream used to send json body
+     * @throws IOException IOException
+     */
     public static void bufferOutJSON(String jsonBody, BufferedOutputStream bufferedOutputStream) throws IOException {
         byte[] jsonBodyBytes = jsonBody.getBytes();
         bufferedOutputStream.write(jsonBodyBytes, 0, jsonBodyBytes.length);
     }
 
+    /**
+     * saves the response with given name to pre-specified path
+     * @param directory directory for the file to be saved in
+     * @param name the name of file which can be empty ,if so method generates name based on type and date
+     * @param responseBody the body of response to be saved
+     * @param contentType the content type of response body
+     */
     public static void saveResponseToFile(String directory, String name, byte[] responseBody, String contentType) {
         if (name == null) {
             Date dNow = new Date();
@@ -38,6 +60,7 @@ public class ModelUtils {
                     new SimpleDateFormat("yyyy.MM.dd'_'hh.mm");
             name = "output_" + dateFormatter.format(dNow);
             String type = contentType.split(";")[0];
+            // looking for familiar types
             if (type.equals("text/html"))
                 name += ".html";
             else if (type.equals("image/png"))
@@ -68,7 +91,6 @@ public class ModelUtils {
 
     }
 
-//    public static void saveRequestToFile;
 
     /**
      * saves request to given file
@@ -90,9 +112,12 @@ public class ModelUtils {
         }
 
     }
-    //util to convert request string to single line command
 
-    //util to print the requests
+    /**
+     * creates a list to be printed with given file containing formatted list of requests
+     * @param fileToRead the file to read requests from
+     * @return the string representing list
+     */
     public static String createRequestList(File fileToRead) {
         StringBuilder requestList = new StringBuilder();
         try {
@@ -118,6 +143,13 @@ public class ModelUtils {
         }
         return requestList.toString();
     }
+
+    /**
+     * reads bytes from file and creates string representing it
+     * @param fileToRead file to read from
+     * @return the string represented formatted requests list
+     * @throws IOException the IOException
+     */
     private static String readListFromFile(File fileToRead) throws IOException {
             FileInputStream inputStream=new FileInputStream(fileToRead);
             byte[] fileContent=new byte[(int) fileToRead.length()];
@@ -126,6 +158,12 @@ public class ModelUtils {
             return new String (fileContent);
 
     }
+
+    /**
+     * creates array of requests from list
+     * @param fileToRead file to read list of requests from
+     * @return array of string representing requests
+     */
     public static String[] createRequestArray(File fileToRead){
         String requestList=null;
         try {
@@ -140,6 +178,11 @@ public class ModelUtils {
         return requests;
     }
 
+    /**
+     * recreates request command using given requests details taken from request list
+     * @param requestDetails the details of request
+     * @return string representing commands of request
+     */
     public static String createCommandLine(String requestDetails) {
         StringBuilder requestCommandLine = new StringBuilder();
         String[] requestParts = requestDetails.trim().split("#");

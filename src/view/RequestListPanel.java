@@ -5,6 +5,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.Serializable;
+
 import model.*;
 /**
  * a panel with logo and a list of requests
@@ -110,7 +112,7 @@ public class RequestListPanel extends JPanel {
 
 
                 //creating Combo Box
-                options= new String[]{"GET", "DELETE", "POST", "PUT", "PATCH"};
+                options= new String[]{"GET", "DELETE", "POST", "PUT", "HEAD"};
                 methodOptions=new JComboBox<>(options);
                 methodOptions.setMaximumSize(new Dimension(100,50));
 
@@ -200,7 +202,7 @@ public class RequestListPanel extends JPanel {
     /**
      * a renderer for list items
      */
-    private class ListItemRenderer implements ListCellRenderer<Request> {
+    private class ListItemRenderer implements ListCellRenderer<Request> , Serializable {
             /*
             creates a panel and adds 2 labels to it and color the label for showing used-method
              */

@@ -4,9 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import view.ErrorException;
 import view.Info;
-import view.MainFrame;
 import view.RequestPanel;
-
 import javax.swing.*;
 import java.util.ArrayList;
 
@@ -20,7 +18,7 @@ public class Request {
     private ArrayList<Info> headers;
     private ArrayList<Info> formData;
     private String jsonBody;
-    private boolean followRedirect ;
+    private boolean followRedirect;
 
     /**
      * constructs a request with given name and option  and the list which this requested is located in
@@ -36,7 +34,7 @@ public class Request {
         headers = new ArrayList<>();
         formData = new ArrayList<>();
         jsonBody = "";
-        followRedirect=false;
+        followRedirect = false;
         requestPanel = new RequestPanel(this, listModel);
     }
 
@@ -136,6 +134,10 @@ public class Request {
         return url;
     }
 
+    /**
+     * sets the json body text
+     * @param jsonBody the body of json
+     */
     public void setJsonBody(String jsonBody) {
         this.jsonBody = jsonBody;
     }
@@ -145,34 +147,44 @@ public class Request {
         return requestName;
     }
 
+    /**
+     * takes the request details and convert it to a format can be used in model.Jurl commandline software
+     * @return string representing request to be used in model.Jurl
+     * @throws ErrorException customized Exception
+     */
     public String createCommandLine() throws ErrorException {
         StringBuilder commandLine = new StringBuilder();
         if (url.isEmpty()) {
+            //throws error when user didn't enter the url
             throw new ErrorException("You didn't enter the url");
         } else if (!url.startsWith("http")) {
+            //throw error when url doesn't start with http or https
             throw new ErrorException("You need to enter full form of url (containing http or http )");
         } else {
-            commandLine.append(url).append(" ");
-            commandLine.append("-M ").append(method).append(" ");
-            commandLine.append("-i").append(" ");
-
-            for (Info header : headers) {
+            commandLine.append(url).append(" ");// adds url to the beginning
+            commandLine.append("-M ").append(method).append(" "); // adds method to line
+            commandLine.append("-i").append(" "); // shows headers
+            if (followRedirect)
+                commandLine.append("-f").append(" ");
+            for (Info header : headers) { //adds header with specified format
                 commandLine.append("-H ").append("\"")
                         .append(header.getKey()).append(":").append(header.getValue())
                         .append("\"").append(" ");
             }
-            if(formData.size()>0 &&jsonBody!=""){
+            if (formData.size() > 0 && !jsonBody.isEmpty()) {
                 throw new ErrorException("You can't have 2 request bodies at same time");
-            }else{
+            } else {
 
                 for (Info formData : formData) {
-                    commandLine.append("-d ").append("\"")
-                            .append(formData.getKey()).append("=").append(formData.getValue())
-                            .append("\"").append(" ");
+                    if (formData.getState()) {
+                        commandLine.append("-d ").append("\"")
+                                .append(formData.getKey()).append("=").append(formData.getValue())
+                                .append("\"").append(" ");
+                    }
                 }
-                //TODO this part fucks everything
-                if (!jsonBody.isEmpty()){
-                    if(validateJsonBody())
+
+                if (!jsonBody.isEmpty()) {
+                    if (validateJsonBody())
                         commandLine.append("--json ").append(jsonBody).append(" ");
                     else
                         throw new ErrorException("JSON body is not valid");
@@ -185,15 +197,23 @@ public class Request {
         return commandLine.toString();
     }
 
+    /**
+     * sets the follow redirect boolean value
+     * @param followRedirect the value to be set
+     */
     public void setFollowRedirect(boolean followRedirect) {
         this.followRedirect = followRedirect;
     }
 
-    private boolean validateJsonBody(){
-        try{
-            JSONObject json=new JSONObject(jsonBody);
+    /**
+     * validates json body's format
+     * @return if its json or not
+     */
+    private boolean validateJsonBody() {
+        try {
+            JSONObject json = new JSONObject(jsonBody);
             return true;
-        }catch (JSONException e){
+        } catch (JSONException e) {
             return false;
         }
     }

@@ -1,9 +1,12 @@
 package model;
 
-import controller.ModelUtils;
+import model.ModelUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import view.ErrorException;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLHandshakeException;
 import java.io.*;
 import java.net.*;
 import java.util.HashMap;
@@ -32,7 +35,7 @@ public class Jurl {
     private static StringBuilder response;
     private static boolean isGUIAsking;
 
-    public static void main(String[] args) throws MalformedURLException {
+    public static void main(String[] args) {
         requestsFile = new File(SAVING_DIRECTORY + "requestList.txt");
         Scanner input = new Scanner(System.in);
         String[] commandLine = input.nextLine()
@@ -42,15 +45,20 @@ public class Jurl {
 
 
         //checking command line first entry
-        if (commandLine[0].equals("list")) {
+        if (commandLine[0].equals("-H") || commandLine[0].equals("--help")) {
+            printHelp();
+        } else if (commandLine[0].equals("list")) {
             printList();
         } else if (commandLine[0].equals("fire")) { //handling fire command
             fireRequest(commandLine);
         } else {
-            createHTTPConnection(commandLine,false);
+            createHTTPConnection(commandLine, false);
         }
     }
 
+    /**
+     * prints the list of requests saved in the file
+     */
     private static void printList() {
         if (requestsFile.exists()) {
             String list = ModelUtils.createRequestList(requestsFile);
@@ -60,6 +68,11 @@ public class Jurl {
         }
     }
 
+    /**
+     * fires the specified requests
+     *
+     * @param commandLine the line to get the request numbers from
+     */
     private static void fireRequest(String[] commandLine) {
         if (requestsFile.exists()) {
             String[] requests = ModelUtils.createRequestArray(requestsFile);
@@ -70,15 +83,11 @@ public class Jurl {
                         String requestInCommandForm = ModelUtils.createCommandLine(requestDetail.replaceAll("#$", ""));
                         createHTTPConnection(requestInCommandForm.replaceAll("\\s{2,}", " ")
                                 .trim()
-                                .split(" "),false);
+                                .split(" "), false);
                     } catch (IndexOutOfBoundsException e) {
-//                        e.printStackTrace();
                         System.out.println("there is no request with that index");
                     } catch (NumberFormatException e) {
                         System.out.println("You didn't enter number");
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                        System.out.println("You entered Malformed url");
                     }
                 }
             } else
@@ -89,10 +98,11 @@ public class Jurl {
         }
     }
 
-
-
+    /**
+     * sets the default variables when http connection want to be established
+     */
     private static void setDefaults() {
-        response=new StringBuilder();
+        response = new StringBuilder();
         showResponseHeader = false;
         isRedirectAllowed = false;
         saveRequestPermission = false;
@@ -104,15 +114,27 @@ public class Jurl {
         addedHeaders = new HashMap<>();
     }
 
-    public static String createHTTPConnection(String[] args,boolean guiArg) throws MalformedURLException {
-        isGUIAsking=guiArg;
+    /**
+     * opens an http connection with given parameters
+     *
+     * @param args   the parameters given by user
+     * @param guiArg whether this method initiated by terminal or graphical interface
+     * @return returns an string representing response details
+     */
+    public static String createHTTPConnection(String[] args, boolean guiArg) {
+        isGUIAsking = guiArg;
         System.out.println("connecting ...");
         setDefaults();
         commandLine = args;
+
         try {
             setUrl();
-            connection = (HttpURLConnection) url.openConnection();
+            if (url.getProtocol().equals("http"))
+                connection = (HttpURLConnection) url.openConnection();
+            else if (url.getProtocol().equals("https"))
+                connection = (HttpsURLConnection) url.openConnection();
             connection.setInstanceFollowRedirects(false);
+            //set variables based on user Inputs
             setMethod();
             setHeaders();
             setShowResponseHeader();
@@ -131,23 +153,36 @@ public class Jurl {
             getResponse();
 
         } catch (MalformedURLException e) {
-//            e.printStackTrace();
-            System.out.println("entered url is malformed");
-            throw new MalformedURLException();
-
+//            e.printStackTrace()
+            String error = "entered url is malformed\nplease enter url starting with http or https\n";
+            if (isGUIAsking)
+                ErrorException.showError(error);
+            else
+                System.out.println(error + "url/fire/list parameters ");
         } catch (IOException | NullPointerException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             System.out.println("Connection couldn't be established");
         } catch (WrongUserInputException e) {
             connection.disconnect();
         }
+
         return response.toString();
     }
 
+    /**
+     * generating and printing response
+     *
+     * @throws WrongUserInputException is thrown when program wants to close connection(in order to create a new one or
+     *                                 because of an exception)
+     */
     private static void getResponse() throws WrongUserInputException {
         try {
+
+            /*
+            isGUIAsking is used to not print details in console when using gui
+             */
             //getting the response
-            String statusStr=connection.getResponseCode() + " - " + connection.getResponseMessage();
+            String statusStr = connection.getResponseCode() + " - " + connection.getResponseMessage();
             System.out.println(statusStr);
 
             //adding to response string (phase 3)
@@ -159,17 +194,19 @@ public class Jurl {
                 inputStream = connection.getInputStream();
 
             //printing response headers
-            String headers=getResponseHeaders();
+            String headers = getResponseHeaders();
             response.append(headers);
-            if (showResponseHeader){
-                System.out.println(headers);
+            if (showResponseHeader) {
+                if (!isGUIAsking)
+                    System.out.println(headers);
             }
-            response.append("->body:");
+            response.append("--->body:");
             if (!(connection.getRequestMethod().equals("HEAD")) &&
                     connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 receiveResponseBody();
-                response.append(new String(responseBody));
-                System.out.println("->body:\n"+new String(responseBody)); // converts the byte of response body to string and prints it
+                response.append(new String(responseBody, "UTF-8"));
+                if (!isGUIAsking)
+                    System.out.println("-->body:\n" + new String(responseBody)); // converts the byte of response body to string and prints it
 
             }
 
@@ -183,20 +220,43 @@ public class Jurl {
                 System.out.println("Redirecting to : " + newUrl + "... \n");
                 String[] newCommandLine = convertToString(commandLine).replaceAll(url.toString(), newUrl).split(" ");
                 System.out.println(convertToString(newCommandLine));
-                createHTTPConnection(newCommandLine,false);
+                createHTTPConnection(newCommandLine, isGUIAsking);
                 throw new WrongUserInputException();
             }
         } catch (UnknownHostException e) {
-            System.out.println("Unknown Host ");
+            if (isGUIAsking)
+                ErrorException.showError("Unknown Host ");
+            else
+                System.out.println("Unknown Host ");
             throw new WrongUserInputException();
         } catch (IOException e) {
-            System.out.println("IO error occurred");
+//            e.printStackTrace();
+            String error = "";
+            if (e instanceof SocketException) {
+                if (e.getMessage().contains("timed out"))
+                    error += "connection timed out";
+                else
+                    error += "check out url protocol";
+
+            } else if (e instanceof SSLHandshakeException)
+                error += "No subject alternative DNS name found";
+            error += "\nIO error occurred";
+            if (isGUIAsking)
+                ErrorException.showError(error);
+            else
+                System.out.println(error);
             throw new WrongUserInputException();
         } finally {
 //            inputStream.close();
         }
     }
 
+    /**
+     * takes array of string and returns an string including all of array's elements
+     *
+     * @param stringArray the array of string
+     * @return the single string summing elements
+     */
     private static String convertToString(String[] stringArray) {
         StringBuilder newString = new StringBuilder();
         for (String string : stringArray) {
@@ -205,8 +265,12 @@ public class Jurl {
         return newString.toString().trim();
     }
 
+    /**
+     * recieves respond body using connection input stream
+     *
+     * @throws IOException the IOException
+     */
     private static void receiveResponseBody() throws IOException {
-//        BufferedReader input = new BufferedReader(new InputStreamReader(inputStream));
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int byteRead = -1;
         byte[] data = new byte[4096];
@@ -214,19 +278,25 @@ public class Jurl {
             buffer.write(data, 0, byteRead);
         }
         responseBody = buffer.toByteArray();
-
     }
 
+    /**
+     * @return returns the respond body
+     */
     public static byte[] getResponseBody() {
         return responseBody;
     }
 
-    //method for printing response headers
+    /**
+     * getting respond's header
+     *
+     * @return string representing headers
+     */
     private static String getResponseHeaders() {
-        StringBuilder responseHeaders=new StringBuilder();
+        StringBuilder responseHeaders = new StringBuilder();
         Map<String, List<String>> map = connection.getHeaderFields();
         for (String key : map.keySet()) {
-            responseHeaders.append("-> ").append(key).append(": ");
+            responseHeaders.append("---> ").append(key).append(": ");
             List<String> values = map.get(key);
             for (String value : values) {
                 responseHeaders.append(value).append("\n");
@@ -235,12 +305,15 @@ public class Jurl {
         return responseHeaders.toString();
     }
 
-    //method for setting url
+    /**
+     * sets the url using commandline array
+     *
+     * @throws MalformedURLException
+     */
     private static void setUrl() throws MalformedURLException {
         try {
             url = new URL(commandLine[0]);
         } catch (ArrayIndexOutOfBoundsException e) {
-//            System.out.println("error in setURL method");
             System.out.println("note that url should be placed at the first place . syntax -> model.Jurl (url) ...");
         }
 
@@ -269,9 +342,13 @@ public class Jurl {
         }
     }
 
-    //method for setting request's method -M --method
+    /**
+     * sets request's method which user specified with -M or --method
+     *
+     * @throws WrongUserInputException throws this exception when entered method isn't allowed
+     */
     private static void setMethod() throws WrongUserInputException {
-        String[] validMethods = {"GET", "POST", "DELETE", "PUT","HEAD"};
+        String[] validMethods = {"GET", "POST", "DELETE", "PUT", "HEAD"};
         for (int commandIndex = 0; commandIndex < commandLine.length; commandIndex++) {
             if (commandLine[commandIndex].equals("-M") || commandLine[commandIndex].equals("--method")) {
                 try {
@@ -286,14 +363,13 @@ public class Jurl {
                     throw new WrongUserInputException();
 
                 } catch (ProtocolException e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 } catch (IndexOutOfBoundsException e) {
                     System.out.println("You didn't enter the request's method");
                 }
             }
         }
     }
-    //method for printing help  -h --help
 
     /**
      * sets the redirect permission true if user entered -f argument
@@ -346,6 +422,9 @@ public class Jurl {
 
     }
 
+    /**
+     * search for -S or --save and sets related boolean value true if find it
+     */
     private static void setSaveRequestPermission() {
         for (int commandIndex = 0; commandIndex < commandLine.length; commandIndex++) {
             if (commandLine[commandIndex].equals("-S") || commandLine[commandIndex].equals("--save")) {
@@ -386,6 +465,12 @@ public class Jurl {
         ModelUtils.saveRequestToFile(requestString.toString().getBytes(), requestsFile);
     }
 
+    /**
+     * search commandline for json or form-data body
+     *
+     * @throws WrongUserInputException
+     * @throws IOException
+     */
     private static void bodyCheck() throws WrongUserInputException,
             IOException {
         boolean isBodyJson = false;
@@ -396,8 +481,8 @@ public class Jurl {
             if (command.equals("-j") || command.equals("--json"))
                 isBodyJson = true;
         }
-//        System.out.println(isBodyForm + "-" + isBodyJson);
-        if (connection.getRequestMethod().equals("POST")) {
+        // checks if user creating body only for post and put methods
+        if (connection.getRequestMethod().equals("POST") || connection.getRequestMethod().equals("PUT")) {
             connection.setDoOutput(true);
             BufferedOutputStream dataOutput;
             if (isBodyForm && isBodyJson) {
@@ -413,12 +498,15 @@ public class Jurl {
                 ModelUtils.bufferOutJSON(jsonBody, dataOutput);
             }
         } else if (isBodyForm || isBodyJson) {
-            System.out.println("You are specifying a request bod with a non POST method");
+            String error = "You are specifying a request body with a non POST method";
+            if (isGUIAsking)
+                ErrorException.showError(error);
+            else
+                System.out.println("You are specifying a request body with a non POST method");
             throw new WrongUserInputException();
         }
     }
 
-    //method for setting message body in form Data structure -d --data
     //TODO  : u should handle urlencoded tor styles
     private static void generateFormDataBody() throws WrongUserInputException {
         connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
@@ -430,8 +518,11 @@ public class Jurl {
                     if (!(nextCommand.startsWith("-")) && nextCommand.startsWith("\"")) {
                         String formData = commandLine[commandIndex + 1];
                         formData = formData.replaceAll("^\"|\"$", "");
-                        String[] formDataParts = formData.split("=");
-                        formDataMap.put(formDataParts[0], formDataParts[1]);
+                        String[] forms = formData.split("&"); //handles urlencoded
+                        for (String form : forms) {
+                            String[] formDataParts = form.split("=");
+                            formDataMap.put(formDataParts[0], formDataParts[1]);
+                        }
                     } else throw new Exception();
                 } catch (IndexOutOfBoundsException e) {
                     System.out.println("You didn't enter form-data");
@@ -446,8 +537,6 @@ public class Jurl {
         }
 
     }
-
-    //method for setting message body in JSON structure -j --json   (bounce)
 
     /**
      * looks for json body and validate it and if it was valid assign it to field variable
@@ -480,12 +569,60 @@ public class Jurl {
         }
 
     }
-    //method to create a menu like thing for selecting requests
 
     //method to use proxy (phase 4) --proxy & --ip  (emtiazi)
 
-    //exception
+    /**
+     * this exception is used as a marker to end connection
+     */
     private static class WrongUserInputException extends Exception {
+    }
 
+    /**
+     * downloads the pic and return its byte to be used in preview panel
+     *
+     * @param url
+     * @return
+     */
+    public static byte[] downloadPic(String url) {
+        try {
+            URL urlToDownload = new URL(url);
+            HttpURLConnection newConnection = (HttpURLConnection) urlToDownload.openConnection();
+            BufferedInputStream reader = new BufferedInputStream(newConnection.getInputStream());
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] data = new byte[2048];
+            int nRead = -1;
+            while ((nRead = reader.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+            return buffer.toByteArray();
+        } catch (IOException e) {
+//            e.printStackTrace();
+            ErrorException.showError("Can't download pic");
+        }
+        return null;
+    }
+
+    /**
+     * prints help
+     */
+    private static void printHelp() {
+        String[] commandHelp = {
+                "-M, --method <method> sets requests method (by default GET) ",
+                "-H, --header <Header> adds header to the request",
+                "-i shows response header",
+                "-H, --help this text help",
+                "-f enables program to follow redirect response ",
+                "-O, --output <fileName> saves the response body in specified filePath using given name",
+                "-S, --save saves request details and can be reused later using fire command",
+                "-d, --data <form-data> specifying form-data body",
+                "-J, --json <json body> specifying json body",
+                "list  prints the list of saved requests",
+                "fire request's index ... fires requests in given order"
+        };
+        for (String helpPart : commandHelp) {
+            System.out.println(helpPart);
+        }
     }
 }
